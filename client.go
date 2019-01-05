@@ -1,7 +1,8 @@
-package chatroom
+package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -40,23 +41,36 @@ var (
 
 // Configure the upgrader
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
-// serveWs handles websocket requests from the peer.
-func handleWebsocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+// ClientWebsocketHandler handles websocket requests from the peer.
+func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
+	type response struct {
+		ClientID string `json:"uuid"`
+	}
+
+	// get the UUID from the get parameter
+	hubUUID := r.URL.Query().Get("hubUUID")
+
+	hub, err := GetHubFromUUID(hubUUID)
 	if err != nil {
-		log.Println(err)
 		return
 	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	client := &Client{
 		hub:  hub,
 		conn: conn,
 		send: make(chan []byte, 256),
 	}
+
 	client.hub.register <- client
 
 	go client.writePipe()
