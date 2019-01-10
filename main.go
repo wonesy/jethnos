@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 // BaseURL ...
@@ -21,6 +22,9 @@ func StartServer() {
 	router.HandleFunc("/createhub", CreateHubHandler)
 	router.HandleFunc("/joinhub", ClientWebsocketHandler)
 	router.HandleFunc("/listhubs", ListHubHandler)
+
+	handler := cors.Default().Handler(router)
+	http.ListenAndServe(BaseURL, handler)
 
 	err := http.ListenAndServe(BaseURL, router)
 	if err != nil {

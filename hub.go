@@ -28,34 +28,38 @@ type Hub struct {
 	Unregister chan *Client
 }
 
+// MarshalJSON ...
+func (h *Hub) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		UUID       string `json:"uuid"`
+		NumClients int    `json:"numClients"`
+	}{
+		h.UUID.String(),
+		len(h.Clients),
+	})
+}
+
 // CreateHubHandler ...
 func CreateHubHandler(w http.ResponseWriter, r *http.Request) {
-	type response struct {
-		HubUUID string `json:"uuid"`
-	}
-
 	if r.Method != "GET" {
 		fmt.Printf("Invalid method: %v\n", r.Method)
-		BadRequestResponse(w)
+		BadRequestResponse(w, []byte("Invalid method"))
 		return
 	}
 
 	h := NewHub()
 	go h.runHub()
 
-	resp := response{h.UUID.String()}
-	data, err := json.Marshal(resp)
-	if err != nil {
-		InternalErrorReponse(w)
-		return
-	}
-
-	JSONResponse(w, http.StatusOK, data)
+	JSONResponse(w, http.StatusOK, h)
 }
 
 // ListHubHandler ...
 func ListHubHandler(w http.ResponseWriter, r *http.Request) {
-
+	hubList := []*Hub{}
+	for _, h := range globalHubMap {
+		hubList = append(hubList, h)
+	}
+	JSONResponse(w, http.StatusOK, hubList)
 }
 
 // GetHubFromUUID ...

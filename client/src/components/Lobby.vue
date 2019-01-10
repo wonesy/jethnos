@@ -1,14 +1,15 @@
 <template>
-<div>
-  <div class="columns">
-    <div class="column is-one-third lobby-view">
-      yo
-    </div>
-    <div class="column chat-room">
-      <Chat/>
+  <div>
+    <div class="columns">
+      <div class="column is-one-third lobby-view">yo</div>
+      <div class="column chat-room">
+        <Chat/>
+        <li v-for="hub in hubs" :key="hub">
+          {{hub.uuid}}
+        </li>
+      </div>
     </div>
   </div>
-</div>
 </template>
 
 <script>
@@ -21,7 +22,21 @@ export default {
   },
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      msg: 'Welcome to Your Vue.js App',
+      hubs: []
+    }
+  },
+  created () {
+    this.listHubs()
+  },
+  methods: {
+    listHubs () {
+      let listHubsUrl = 'http://localhost:4444/listhubs'
+      console.log('shiiiiit')
+      fetch(listHubsUrl)
+        .then(stream => console.log(stream))
+        .then(data => (this.hubs = data))
+        .catch(error => console.error(error))
     }
   }
 }

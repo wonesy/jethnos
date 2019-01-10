@@ -1,35 +1,40 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 )
 
 // BuildResponse ...
-func BuildResponse(w http.ResponseWriter, status int, msg []byte) {
-	w.WriteHeader(status)
-	w.Write(msg)
+func BuildResponse(w http.ResponseWriter, code int, data []byte) {
+	w.WriteHeader(code)
+	w.Write(data)
 }
 
-// JSONResponse ...
-func JSONResponse(w http.ResponseWriter, status int, msg []byte) {
-	w.Header().Set("Content-Type", "application/json")
-	BuildResponse(w, status, msg)
-}
-
-// OKReponse ...
-func OKReponse(w http.ResponseWriter) {
-	msg := []byte("Success")
-	BuildResponse(w, http.StatusOK, msg)
-}
-
-// InternalErrorReponse ...
-func InternalErrorReponse(w http.ResponseWriter) {
-	msg := []byte("There was an internal server error")
+// InternalServerErrorResponse ...
+func InternalServerErrorResponse(w http.ResponseWriter, msg []byte) {
 	BuildResponse(w, http.StatusInternalServerError, msg)
 }
 
+// OKResponse ...
+func OKResponse(w http.ResponseWriter, msg []byte) {
+	BuildResponse(w, http.StatusOK, msg)
+}
+
 // BadRequestResponse ...
-func BadRequestResponse(w http.ResponseWriter) {
-	msg := []byte("Bad request")
+func BadRequestResponse(w http.ResponseWriter, msg []byte) {
 	BuildResponse(w, http.StatusBadRequest, msg)
+}
+
+// JSONResponse ...
+func JSONResponse(w http.ResponseWriter, code int, v interface{}) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		msg := []byte("Could not encode json data")
+		InternalServerErrorResponse(w, msg)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(data)
 }

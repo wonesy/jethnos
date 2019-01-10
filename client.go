@@ -71,7 +71,7 @@ func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		send: make(chan []byte, 256),
 	}
 
-	client.hub.register <- client
+	client.hub.Register <- client
 
 	go client.writePipe()
 	go client.readPipe()
@@ -80,7 +80,7 @@ func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 func (c *Client) readPipe() {
 	// read from the websocket
 	defer func() {
-		c.hub.unregister <- c
+		c.hub.Unregister <- c
 		close(c.send)
 	}()
 
@@ -100,7 +100,7 @@ func (c *Client) readPipe() {
 		}
 
 		// once received, broadcast to the hub
-		c.hub.broadcast <- bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+		c.hub.Broadcast <- bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
 	}
 }
 
