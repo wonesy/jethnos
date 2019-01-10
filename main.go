@@ -20,6 +20,7 @@ func StartServer() {
 	router.HandleFunc("/", handleFunc)
 	router.HandleFunc("/createhub", CreateHubHandler)
 	router.HandleFunc("/joinhub", ClientWebsocketHandler)
+	router.HandleFunc("/listhubs", ListHubHandler)
 
 	err := http.ListenAndServe(BaseURL, router)
 	if err != nil {

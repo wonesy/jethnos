@@ -56,9 +56,9 @@ func TestNewClient(t *testing.T) {
 		}))
 	defer ts.Close()
 
-	url := fmt.Sprintf("%v?hubUUID=%v", ts.URL, hub.id)
+	url := fmt.Sprintf("%v?hubUUID=%v", ts.URL, hub.UUID)
 
-	if len(hub.clients) != 0 {
+	if len(hub.Clients) != 0 {
 		t.Error("Too many clients registered to hub")
 	}
 
@@ -82,18 +82,18 @@ func TestNewClient(t *testing.T) {
 		default:
 		}
 
-		if len(hub.clients) == 1 {
+		if len(hub.Clients) == 1 {
 			break
 		}
 	}
 
 	var spoke *Client
-	for k := range hub.clients {
+	for k := range hub.Clients {
 		spoke = k
 		break
 	}
 
-	if spoke.hub.id != hub.id {
+	if spoke.hub.UUID != hub.UUID {
 		t.Error("Spoke and hub IDs don't match")
 	}
 }

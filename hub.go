@@ -21,11 +21,11 @@ var globalHubMap = make(map[uuid.UUID]*Hub)
 
 // Hub ...
 type Hub struct {
-	id         uuid.UUID
-	clients    map[*Client]struct{}
-	broadcast  chan []byte
-	register   chan *Client
-	unregister chan *Client
+	UUID       uuid.UUID
+	Clients    map[*Client]struct{}
+	Broadcast  chan []byte
+	Register   chan *Client
+	Unregister chan *Client
 }
 
 // CreateHubHandler ...
@@ -43,7 +43,7 @@ func CreateHubHandler(w http.ResponseWriter, r *http.Request) {
 	h := NewHub()
 	go h.runHub()
 
-	resp := response{h.id.String()}
+	resp := response{h.UUID.String()}
 	data, err := json.Marshal(resp)
 	if err != nil {
 		InternalErrorReponse(w)
@@ -51,6 +51,11 @@ func CreateHubHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	JSONResponse(w, http.StatusOK, data)
+}
+
+// ListHubHandler ...
+func ListHubHandler(w http.ResponseWriter, r *http.Request) {
+
 }
 
 // GetHubFromUUID ...
@@ -77,21 +82,21 @@ func GetHubFromUUID(hubUUID string) (*Hub, error) {
 
 // NewHub ...
 func NewHub() *Hub {
-	id, err := uuid.NewUUID()
+	uuid, err := uuid.NewUUID()
 	if err != nil {
 		fmt.Println("Error when creating UUID")
 		return nil
 	}
 
 	h := &Hub{
-		id:         id,
-		clients:    make(map[*Client]struct{}),
-		broadcast:  make(chan []byte),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
+		UUID:       uuid,
+		Clients:    make(map[*Client]struct{}),
+		Broadcast:  make(chan []byte),
+		Register:   make(chan *Client),
+		Unregister: make(chan *Client),
 	}
 
-	globalHubMap[id] = h
+	globalHubMap[uuid] = h
 
 	return h
 }
@@ -99,22 +104,22 @@ func NewHub() *Hub {
 func (h *Hub) runHub() {
 	for {
 		select {
-		case client := <-h.register:
+		case client := <-h.Register:
 			// We must register a new user to the hub
-			h.clients[client] = struct{}{}
-		case client := <-h.unregister:
+			h.Clients[client] = struct{}{}
+		case client := <-h.Unregister:
 			// We must unregister and delete a user from the hub
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
+			if _, ok := h.Clients[client]; ok {
+				delete(h.Clients, client)
 			}
-		case msg := <-h.broadcast:
+		case msg := <-h.Broadcast:
 			// the hub has received a message to broadcast
-			for client := range h.clients {
+			for client := range h.Clients {
 				select {
 				case client.send <- msg:
 				default:
 					// could not send the message, delete user
-					delete(h.clients, client)
+					delete(h.Clients, client)
 				}
 			}
 		}
