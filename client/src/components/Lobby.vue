@@ -32,9 +32,8 @@ export default {
   methods: {
     listHubs () {
       let listHubsUrl = 'http://localhost:4444/listhubs'
-      console.log('shiiiiit')
       fetch(listHubsUrl)
-        .then(stream => console.log(stream))
+        .then(stream => stream.json())
         .then(data => (this.hubs = data))
         .catch(error => console.error(error))
     }
