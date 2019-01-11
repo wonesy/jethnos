@@ -27,47 +27,36 @@ export default {
   },
   data () {
     return {
-      ws: null
+      ws: null,
+      chatText: ''
+    }
+  },
+  created: function () {
+    let wsUrl = 'ws://localhost:4444/ws'
+    if (this.ws === null) {
+      this.ws = new WebSocket(wsUrl)
     }
   },
   watch: {
     hubUUID: {
+      immediate: false,
       handler: function (val, oldVal) {
         console.log('changing from ' + oldVal + ' to ' + val)
-        let wsUrl = 'ws://localhost:4444/joinhub'
-
-        if (this.ws !== null) {
-          console.log('Closing web socket to hub=' + this.hubUUID)
-          this.ws.close()
-          delete this.ws
+        let message = {
+          'type': 'join',
+          'data': {
+            'hubUUID': val
+          }
         }
 
-        this.ws = new WebSocket(wsUrl)
-
-        let data = {}
-        data['hubUUID'] = this.hubUUID
-
-        // fetch(wsUrl, {
-        //   method: 'POST',
-        //   headers: {
-        //     'Accept': 'application/json',
-        //     'Content-Type': 'application/json'
-        //   },
-        //   body: data.json()
-        // })
-        //   .then()
-        //   .catch()
+        let data = JSON.stringify(message)
+        this.ws.send(data)
       }
     }
   },
   methods: {
     send () {
       console.log(this.chatText)
-      let listHubsUrl = 'http://localhost:4444/listhubs'
-      fetch(listHubsUrl)
-        .then(stream => stream.json())
-        .then(data => (this.hubs = data))
-        .catch(error => console.error(error))
     }
   }
 }

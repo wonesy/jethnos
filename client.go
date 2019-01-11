@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -43,21 +44,24 @@ var (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 // ClientWebsocketHandler handles websocket requests from the peer.
 func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
-	type response struct {
-		ClientID string `json:"uuid"`
-	}
+	// type response struct {
+	// 	ClientID string `json:"uuid"`
+	// }
 
-	// get the UUID from the get parameter
-	hubUUID := r.URL.Query().Get("hubUUID")
+	// // get the UUID from the get parameter
+	// hubUUID := r.URL.Query().Get("hubUUID")
 
-	hub, err := GetHubFromUUID(hubUUID)
-	if err != nil {
-		return
-	}
+	// hub, err := GetHubFromUUID(hubUUID)
+	// if err != nil {
+	// 	return
+	// }
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -66,12 +70,12 @@ func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &Client{
-		hub:  hub,
+		hub:  nil,
 		conn: conn,
 		send: make(chan []byte, 256),
 	}
 
-	client.hub.Register <- client
+	// client.hub.Register <- client
 
 	go client.writePipe()
 	go client.readPipe()
@@ -80,7 +84,9 @@ func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 func (c *Client) readPipe() {
 	// read from the websocket
 	defer func() {
-		c.hub.Unregister <- c
+		if c.hub != nil {
+			c.hub.Unregister <- c
+		}
 		close(c.send)
 	}()
 
@@ -88,6 +94,8 @@ func (c *Client) readPipe() {
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+
+	readMsg := Message{}
 
 	for {
 		// read message from socket
@@ -99,8 +107,20 @@ func (c *Client) readPipe() {
 			break
 		}
 
-		// once received, broadcast to the hub
-		c.hub.Broadcast <- bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+		json.Unmarshal(msg, &readMsg)
+
+		fmt.Println(readMsg.Type)
+		fmt.Println(readMsg.Data)
+
+		if c.hub == nil && readMsg.Type != "join" {
+			fmt.Println("Cannot send commands to the hub before joining one")
+			continue
+		}
+
+		if readMsg.Type == "chat" {
+			// once received, broadcast to the hub
+			c.hub.Broadcast <- bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+		}
 	}
 }
 
