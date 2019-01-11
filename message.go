@@ -8,10 +8,11 @@ type Message struct {
 
 // JoinMessage ...
 type JoinMessage struct {
-	HubUUID string `json:"hubUUID"`
+	Type string          `json:"type"`
+	Data JoinMessageData `json:"data"`
 }
 
-// MarshalJSON
-func (m *Message) MarshalJSON() ([]byte, error) {
-	return nil, nil
+// JoinMessageData ...
+type JoinMessageData struct {
+	HubUUID string `json:"hubUUID"`
 }

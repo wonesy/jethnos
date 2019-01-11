@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -40,6 +41,11 @@ var (
 	space   = []byte{' '}
 )
 
+var (
+	// ErrorNilValue ...
+	ErrorNilValue = errors.New("Invalid value passed in, cannot be nil")
+)
+
 // Configure the upgrader
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -51,17 +57,6 @@ var upgrader = websocket.Upgrader{
 
 // ClientWebsocketHandler handles websocket requests from the peer.
 func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
-	// type response struct {
-	// 	ClientID string `json:"uuid"`
-	// }
-
-	// // get the UUID from the get parameter
-	// hubUUID := r.URL.Query().Get("hubUUID")
-
-	// hub, err := GetHubFromUUID(hubUUID)
-	// if err != nil {
-	// 	return
-	// }
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -81,6 +76,17 @@ func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	go client.readPipe()
 }
 
+// RegisterWithHub ...
+func (c *Client) RegisterWithHub(hubUUID string) {
+	hub, err := GetHubFromUUID(hubUUID)
+	if err != nil {
+		return
+	}
+
+	c.hub = hub
+	hub.Register <- c
+}
+
 func (c *Client) readPipe() {
 	// read from the websocket
 	defer func() {
@@ -96,6 +102,7 @@ func (c *Client) readPipe() {
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
 	readMsg := Message{}
+	joinMsg := JoinMessage{}
 
 	for {
 		// read message from socket
@@ -107,19 +114,33 @@ func (c *Client) readPipe() {
 			break
 		}
 
-		json.Unmarshal(msg, &readMsg)
+		fmt.Println("Received message from client")
 
-		fmt.Println(readMsg.Type)
-		fmt.Println(readMsg.Data)
+		err = json.Unmarshal(msg, &readMsg)
+		if err != nil {
+			fmt.Println(err)
+		}
 
+		fmt.Println(readMsg)
+
+		// ensure that we cannot send messages to hub that don't yet exist
 		if c.hub == nil && readMsg.Type != "join" {
 			fmt.Println("Cannot send commands to the hub before joining one")
 			continue
 		}
 
-		if readMsg.Type == "chat" {
-			// once received, broadcast to the hub
+		switch readMsg.Type {
+		case "join":
+			fmt.Println("Joining hub...")
+			err = json.Unmarshal(msg, &joinMsg)
+			if err != nil {
+				fmt.Println(err)
+			}
+			c.RegisterWithHub(joinMsg.Data.HubUUID)
+		case "chat":
 			c.hub.Broadcast <- bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+		default:
+			//
 		}
 	}
 }
