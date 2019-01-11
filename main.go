@@ -22,6 +22,7 @@ func StartServer() {
 	router.HandleFunc("/createhub", CreateHubHandler)
 	router.HandleFunc("/joinhub", ClientWebsocketHandler)
 	router.HandleFunc("/listhubs", ListHubHandler)
+	router.HandleFunc("/ws", ClientWebsocketHandler)
 
 	handler := cors.Default().Handler(router)
 	http.ListenAndServe(BaseURL, handler)
