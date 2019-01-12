@@ -23,7 +23,7 @@ var globalHubMap = make(map[uuid.UUID]*Hub)
 type Hub struct {
 	UUID       uuid.UUID
 	Clients    map[*Client]struct{}
-	Broadcast  chan []byte
+	Broadcast  chan ChatMessageData
 	Register   chan *Client
 	Unregister chan *Client
 }
@@ -95,7 +95,7 @@ func NewHub() *Hub {
 	h := &Hub{
 		UUID:       uuid,
 		Clients:    make(map[*Client]struct{}),
-		Broadcast:  make(chan []byte),
+		Broadcast:  make(chan ChatMessageData),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 	}
@@ -110,6 +110,7 @@ func (h *Hub) runHub() {
 		select {
 		case client := <-h.Register:
 			// We must register a new user to the hub
+			fmt.Println("Client being registerd to hub...")
 			h.Clients[client] = struct{}{}
 		case client := <-h.Unregister:
 			// We must unregister and delete a user from the hub

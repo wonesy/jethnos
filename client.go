@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,7 +15,7 @@ import (
 // Client ...
 type Client struct {
 	id   uuid.UUID
-	send chan []byte
+	send chan ChatMessageData
 	hub  *Hub
 	conn *websocket.Conn
 }
@@ -67,7 +66,7 @@ func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	client := &Client{
 		hub:  nil,
 		conn: conn,
-		send: make(chan []byte, 256),
+		send: make(chan ChatMessageData, 256),
 	}
 
 	// client.hub.Register <- client
@@ -80,6 +79,7 @@ func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
 func (c *Client) RegisterWithHub(hubUUID string) {
 	hub, err := GetHubFromUUID(hubUUID)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
@@ -103,6 +103,7 @@ func (c *Client) readPipe() {
 
 	readMsg := Message{}
 	joinMsg := JoinMessage{}
+	chatMsg := ChatMessage{}
 
 	for {
 		// read message from socket
@@ -121,8 +122,6 @@ func (c *Client) readPipe() {
 			fmt.Println(err)
 		}
 
-		fmt.Println(readMsg)
-
 		// ensure that we cannot send messages to hub that don't yet exist
 		if c.hub == nil && readMsg.Type != "join" {
 			fmt.Println("Cannot send commands to the hub before joining one")
@@ -138,7 +137,14 @@ func (c *Client) readPipe() {
 			}
 			c.RegisterWithHub(joinMsg.Data.HubUUID)
 		case "chat":
-			c.hub.Broadcast <- bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+			fmt.Println("Sending chat message...")
+			err = json.Unmarshal(msg, &chatMsg)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			chatMsg.Data.StripLastNewline()
+			c.hub.Broadcast <- chatMsg.Data
 		default:
 			//
 		}
@@ -163,22 +169,17 @@ func (c *Client) writePipe() {
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.TextMessage)
+			err := c.conn.WriteJSON(msg)
 			if err != nil {
-				return
+				fmt.Println(err)
 			}
-			w.Write(msg)
 
 			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-c.send)
-			}
+			// n := len(c.send)
+			// for i := 0; i < n; i++ {
+			// 	c.conn.WriteJSON(<-c.send)
+			// }
 
-			if err := w.Close(); err != nil {
-				return
-			}
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {

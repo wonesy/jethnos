@@ -1,6 +1,6 @@
 <template>
 <div class="chat-container box">
-  <div class="messages box"></div>
+  <div id="chatbox" class="messages box"></div>
   <!--  -->
   <footer class="footers">
     <div class="field has-addons">
@@ -32,10 +32,24 @@ export default {
     }
   },
   created: function () {
+    // create a new websocket
     let wsUrl = 'ws://localhost:4444/ws'
     if (this.ws === null) {
       this.ws = new WebSocket(wsUrl)
     }
+
+    // create an event listener as well to receieve messages
+    this.ws.addEventListener('message', function (e) {
+      console.log('herererere')
+      console.log(e)
+      var msg = JSON.parse(e.data.trim())
+      var chatContent = '<p>' + msg.name + ': ' + msg.text + '</p>'
+      console.log(chatContent)
+      var element = document.getElementById('chatbox')
+      element.insertAdjacentHTML('beforeend', chatContent)
+      console.log(element)
+      element.scrollTop = element.scrollHeight // Auto scroll to the bottom
+    })
   },
   watch: {
     hubUUID: {
@@ -56,7 +70,16 @@ export default {
   },
   methods: {
     send () {
-      console.log(this.chatText)
+      let chatMessage = {
+        'type': 'chat',
+        'data': {
+          'name': 'someone',
+          'text': this.chatText
+        }
+      }
+
+      let data = JSON.stringify(chatMessage)
+      this.ws.send(data)
     }
   }
 }
