@@ -25,15 +25,13 @@ type ChatMessage struct {
 
 // ChatMessageData ...
 type ChatMessageData struct {
-	Name string `json:"name"`
-	Text string `json:"text"`
+	Name       string `json:"name"`
+	Text       string `json:"text"`
+	SenderUUID string `json:"sender"`
 }
 
-// StripLastNewline ...
-func (data *ChatMessageData) StripLastNewline() {
-	t := data.Text
-
-	if t[len(t)-1] == '\n' {
-		data.Text = t[:len(t)-1]
-	}
+// WhoAmIData ...
+type WhoAmIData struct {
+	Type   string `json:"type"`
+	Sender string `json:"uuid"`
 }

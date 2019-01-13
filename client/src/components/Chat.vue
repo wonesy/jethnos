@@ -1,6 +1,11 @@
 <template>
 <div class="chat-container box">
-  <div id="chatbox" class="messages box"></div>
+  <div id="chatbox" class="messages box">
+    <Message
+      v-for="(msg,index) in messages"
+      :key="index"
+      :msg="msg"/>
+  </div>
   <!--  -->
   <footer class="footers">
     <div class="field has-addons">
@@ -18,8 +23,13 @@
 </template>
 
 <script>
+import Message from './Message.vue'
+
 export default {
   name: 'Chat',
+  components: {
+    Message
+  },
   props: {
     hubUUID: {
       type: String
@@ -28,28 +38,32 @@ export default {
   data () {
     return {
       ws: null,
-      chatText: ''
+      chatText: '',
+      clientUUID: null,
+      messages: []
     }
   },
   created: function () {
+    // save the "Vue" instance for closures
+    // let vm = this
+
     // create a new websocket
     let wsUrl = 'ws://localhost:4444/ws'
     if (this.ws === null) {
       this.ws = new WebSocket(wsUrl)
     }
 
+    // as soon as the websocket is ready, call whoami to get uuid
+    this.ws.onopen = function (e) {
+      let message = {
+        'type': 'whoami',
+        'data': null
+      }
+      e.srcElement.send(JSON.stringify(message))
+    }
+
     // create an event listener as well to receieve messages
-    this.ws.addEventListener('message', function (e) {
-      console.log('herererere')
-      console.log(e)
-      var msg = JSON.parse(e.data.trim())
-      var chatContent = '<p>' + msg.name + ': ' + msg.text + '</p>'
-      console.log(chatContent)
-      var element = document.getElementById('chatbox')
-      element.insertAdjacentHTML('beforeend', chatContent)
-      console.log(element)
-      element.scrollTop = element.scrollHeight // Auto scroll to the bottom
-    })
+    this.ws.onmessage = this.handleMessages
   },
   watch: {
     hubUUID: {
@@ -74,12 +88,39 @@ export default {
         'type': 'chat',
         'data': {
           'name': 'someone',
-          'text': this.chatText
+          'text': this.chatText,
+          'sender': this.clientUUID
         }
       }
 
       let data = JSON.stringify(chatMessage)
       this.ws.send(data)
+    },
+    handleMessages (e) {
+      var msg = JSON.parse(e.data.trim())
+
+      // if it is not a chat message, handle it here
+      if (msg.hasOwnProperty('type')) {
+        if (msg.type === 'whoami') {
+          this.clientUUID = msg.uuid
+        }
+        return
+      }
+
+      // requried details for a Message component
+      let msgProps = {
+        'name': msg.name,
+        'text': msg.text,
+        'isMe': (msg.sender === this.clientUUID)
+      }
+
+      console.log(msg)
+      this.messages.push(msgProps)
+
+      this.$nextTick(() => {
+        let e = document.getElementById('chatbox')
+        e.scrollTop = e.scrollHeight
+      })
     }
   }
 }
@@ -96,5 +137,7 @@ export default {
 
 .messages {
   flex: 1;
+  overflow: hidden;
+  overflow-y: scroll;
 }
 </style>

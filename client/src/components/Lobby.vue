@@ -31,13 +31,18 @@ export default {
   },
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App',
       activeHub: '',
       hubs: []
     }
   },
+  computed: {
+    token () {
+      return this.$store.getters.getToken
+    }
+  },
   created () {
-    this.listHubs()
+    this.getToken()
+    // this.listHubs()
   },
   methods: {
     listHubs () {
@@ -45,6 +50,14 @@ export default {
       fetch(listHubsUrl)
         .then(stream => stream.json())
         .then(data => (this.hubs = data))
+        .catch(error => console.error(error))
+    },
+    getToken () {
+      console.log('getting token')
+      let getTokenUrl = 'http://localhost:4444/gettoken'
+      fetch(getTokenUrl)
+        .then(stream => stream.json())
+        .then(data => (this.$store.commit('SET_TOKEN', data.token)))
         .catch(error => console.error(error))
     }
   }

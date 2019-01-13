@@ -56,20 +56,24 @@ var upgrader = websocket.Upgrader{
 
 // ClientWebsocketHandler handles websocket requests from the peer.
 func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
-
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
+	uuid, err := uuid.NewUUID()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	client := &Client{
+		id:   uuid,
 		hub:  nil,
 		conn: conn,
 		send: make(chan ChatMessageData, 256),
 	}
-
-	// client.hub.Register <- client
 
 	go client.writePipe()
 	go client.readPipe()
@@ -85,6 +89,14 @@ func (c *Client) RegisterWithHub(hubUUID string) {
 
 	c.hub = hub
 	hub.Register <- c
+}
+
+// BuildWhoAmI ...
+func BuildWhoAmI(c *Client) WhoAmIData {
+	return WhoAmIData{
+		Type:   "whoami",
+		Sender: c.id.String(),
+	}
 }
 
 func (c *Client) readPipe() {
@@ -123,7 +135,7 @@ func (c *Client) readPipe() {
 		}
 
 		// ensure that we cannot send messages to hub that don't yet exist
-		if c.hub == nil && readMsg.Type != "join" {
+		if c.hub == nil && readMsg.Type == "chat" {
 			fmt.Println("Cannot send commands to the hub before joining one")
 			continue
 		}
@@ -142,11 +154,12 @@ func (c *Client) readPipe() {
 			if err != nil {
 				fmt.Println(err)
 			}
-
-			chatMsg.Data.StripLastNewline()
 			c.hub.Broadcast <- chatMsg.Data
+		case "whoami":
+			fmt.Println("Client is requesting their id...")
+			c.conn.WriteJSON(BuildWhoAmI(c))
 		default:
-			//
+			fmt.Println("Dropping message of unknown type")
 		}
 	}
 }

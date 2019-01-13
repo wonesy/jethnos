@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"github.com/urfave/negroni"
 )
 
 // BaseURL ...
@@ -17,20 +18,30 @@ func handleFunc(w http.ResponseWriter, r *http.Request) {
 
 // StartServer ...
 func StartServer() {
+	// basic, no auth routes
 	router := mux.NewRouter()
 	router.HandleFunc("/", handleFunc)
-	router.HandleFunc("/createhub", CreateHubHandler)
-	router.HandleFunc("/joinhub", ClientWebsocketHandler)
-	router.HandleFunc("/listhubs", ListHubHandler)
 	router.HandleFunc("/ws", ClientWebsocketHandler)
+	router.HandleFunc("/gettoken", GetTokenHandler)
 
-	handler := cors.Default().Handler(router)
-	http.ListenAndServe(BaseURL, handler)
+	// routes specific for chat
+	authRouter := mux.NewRouter()
+	authRouter.HandleFunc("/createhub", CreateHubHandler)
+	authRouter.HandleFunc("/listhubs", ListHubHandler)
 
-	err := http.ListenAndServe(BaseURL, router)
-	if err != nil {
-		return
-	}
+	// auth negroni just for authRouter
+	an := negroni.New(
+		negroni.HandlerFunc(JwtMiddleware.HandlerWithNext), // token auth
+		negroni.Wrap(authRouter),                           // include auth routes
+	)
+
+	router.PathPrefix("/").Handler(an)
+
+	n := negroni.New()
+	n.Use(cors.Default())
+	n.UseHandler(router)
+
+	n.Run(BaseURL)
 }
 
 func main() {
