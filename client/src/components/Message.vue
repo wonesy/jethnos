@@ -1,5 +1,5 @@
 <template>
-  <div v-bind:class="{isme: msg.isMe}">
+  <div v-bind:class="{'is-me': msg.isMe, 'is-sys': msg.name==='System'}">
     <p>{{msg.name}}: {{msg.text}}</p>
   </div>
 </template>
@@ -31,7 +31,12 @@ p {
   text-align: right;
 }
 
-.isme p {
+.is-me p {
   text-align: left;
+}
+
+.is-sys p {
+  text-align: center;
+  color: dimgray;
 }
 </style>

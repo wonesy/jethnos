@@ -4,7 +4,7 @@
       <Banner v-on:change-tab="changeTab"/>
     </div>
     <keep-alive>
-      <component v-bind:is="currentTabComponent"></component>
+      <component v-bind:is="currentTabComponent" :defaultHandle="anonHandle"></component>
     </keep-alive>
   </div>
 </template>
@@ -12,24 +12,31 @@
 <script>
 import Banner from './Banner'
 import Lobby from './Lobby'
+import User from './User'
 
 export default {
   name: 'Main',
   components: {
     Banner,
-    Lobby
+    Lobby,
+    User
   },
   data () {
     return {
-      currentTabComponent: Lobby
+      currentTabComponent: Lobby,
+      anonHandle: ''
     }
+  },
+  created: function () {
+    this.anonHandle = 'anon' + (Math.floor(Math.random() * 10000)).toString()
+    this.$store.dispatch('setUserHandle', this.anonHandle)
   },
   methods: {
     changeTab: function (tab) {
       if (tab === 'lobby') {
         this.currentTabComponent = Lobby
-      } else if (tab === 'banner') {
-        this.currentTabComponent = Banner
+      } else if (tab === 'user') {
+        this.currentTabComponent = User
       }
     }
   }

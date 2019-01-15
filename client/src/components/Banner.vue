@@ -1,11 +1,15 @@
 <template>
   <div class="hero is-primary banner">
-    <button v-on:click="$emit('change-tab', 'lobby')">
-      Lobby
-    </button>
-    <button v-on:click="$emit('change-tab', 'banner')">
-      Banner
-    </button>
+    <div class="tabs is-centered">
+      <ul>
+        <li class="is-active">
+          <a v-on:click="$emit('change-tab', 'lobby')">Lobby</a>
+        </li>
+        <li>
+          <a v-on:click="$emit('change-tab', 'user')">User</a>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 

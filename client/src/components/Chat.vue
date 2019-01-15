@@ -40,12 +40,14 @@ export default {
       ws: null,
       chatText: '',
       clientUUID: null,
-      messages: []
+      messages: [],
+      handle: null
     }
   },
   created: function () {
     // save the "Vue" instance for closures
     // let vm = this
+    this.handle = this.$store.getters.userHandle
 
     // create a new websocket
     let wsUrl = 'ws://localhost:4444/ws'
@@ -65,6 +67,11 @@ export default {
     // create an event listener as well to receieve messages
     this.ws.onmessage = this.handleMessages
   },
+  computed: {
+    newHandle: function () {
+      return this.$store.getters.userHandle
+    }
+  },
   watch: {
     hubUUID: {
       immediate: false,
@@ -80,6 +87,16 @@ export default {
         let data = JSON.stringify(message)
         this.ws.send(data)
       }
+    },
+    newHandle: {
+      immediate: true,
+      handler: function (val, oldVal) {
+        if (val !== oldVal) {
+          this.handle = val
+          let sysMsg = '' + oldVal + ' has changed their name to ' + val
+          this.sendAdminMessage(sysMsg)
+        }
+      }
     }
   },
   methods: {
@@ -87,9 +104,23 @@ export default {
       let chatMessage = {
         'type': 'chat',
         'data': {
-          'name': 'someone',
+          'name': this.handle,
           'text': this.chatText,
           'sender': this.clientUUID
+        }
+      }
+
+      let data = JSON.stringify(chatMessage)
+      this.ws.send(data)
+      this.chatText = ''
+    },
+    sendAdminMessage (msg) {
+      let chatMessage = {
+        'type': 'chat',
+        'data': {
+          'name': 'System',
+          'text': msg,
+          'sender': 'System'
         }
       }
 
