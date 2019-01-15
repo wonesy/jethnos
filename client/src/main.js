@@ -5,8 +5,11 @@ import Vuex from 'vuex'
 import App from './App'
 import router from './router'
 import './../node_modules/bulma/css/bulma.css'
+import VueResource from 'vue-resource'
 
+Vue.use(VueResource)
 Vue.use(Vuex)
+
 Vue.config.productionTip = false
 
 // eslint-disable-next-line
@@ -20,12 +23,24 @@ const store = new Vuex.Store({
     }
   },
   actions: {
-    setToken (context, token) {
-      context.commit('SET_TOKEN', token)
+    fetchToken ({commit}) {
+      return new Promise((resolve, reject) => {
+        Vue.http.get('http://localhost:4444/gettoken')
+          .then((response) => {
+            commit('SET_TOKEN', response.body['token'])
+            resolve()
+          })
+          .catch(error => {
+            console.log(error.statusText)
+            reject(error.statusText)
+          })
+      })
     }
   },
   getters: {
-    token: state => state.token
+    token: state => {
+      return state.token
+    }
   }
 })
 
@@ -37,3 +52,17 @@ new Vue({
   components: { App },
   template: '<App/>'
 })
+
+export function authHeader () {
+  // return authorization header with jwt token
+  let token = store.getters.token
+
+  console.log('yoooooooooooo')
+  console.log(token)
+
+  if (token) {
+    return { 'Authorization': 'Bearer ' + token }
+  } else {
+    return {}
+  }
+}

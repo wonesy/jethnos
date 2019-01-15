@@ -23,6 +23,7 @@
 
 <script>
 import Chat from './Chat'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'Lobby',
@@ -36,29 +37,28 @@ export default {
     }
   },
   computed: {
-    token () {
-      return this.$store.getters.getToken
-    }
+    ...mapGetters([
+      'token'
+    ])
   },
   created () {
-    this.getToken()
-    // this.listHubs()
+    this.$store.dispatch('fetchToken').then(() => {
+      console.log('finished with the token fetching')
+      this.listHubs()
+    })
   },
   methods: {
     listHubs () {
+      let token = this.$store.getters.token
+      let requestOptions = {
+        headers: { 'Authorization': 'Bearer ' + token }
+      }
+      console.log(requestOptions)
       let listHubsUrl = 'http://localhost:4444/listhubs'
-      fetch(listHubsUrl)
+      this.$http.get(listHubsUrl, requestOptions)
         .then(stream => stream.json())
         .then(data => (this.hubs = data))
-        .catch(error => console.error(error))
-    },
-    getToken () {
-      console.log('getting token')
-      let getTokenUrl = 'http://localhost:4444/gettoken'
-      fetch(getTokenUrl)
-        .then(stream => stream.json())
-        .then(data => (this.$store.commit('SET_TOKEN', data.token)))
-        .catch(error => console.error(error))
+        .catch(error => console.log(error))
     }
   }
 }

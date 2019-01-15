@@ -59,7 +59,7 @@ export default {
         'type': 'whoami',
         'data': null
       }
-      e.srcElement.send(JSON.stringify(message))
+      e.explicitOriginalTarget.send(JSON.stringify(message))
     }
 
     // create an event listener as well to receieve messages
