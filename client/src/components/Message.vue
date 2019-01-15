@@ -27,7 +27,11 @@ export default {
 </script>
 
 <style scoped>
+p {
+  text-align: right;
+}
+
 .isme p {
-  text-align: left
+  text-align: left;
 }
 </style>

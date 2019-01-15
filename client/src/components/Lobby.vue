@@ -1,6 +1,6 @@
 <template>
   <div class="lobby-container is-fullheight">
-    <div class="columns is-fullheight">
+    <div class="columns site-meat">
       <div class="column is-one-third lobby-view">
         <div class="buttons">
           <a
@@ -24,6 +24,7 @@
 <script>
 import Chat from './Chat'
 import { mapGetters } from 'vuex'
+import { authHeader } from '../main.js'
 
 export default {
   name: 'Lobby',
@@ -49,9 +50,8 @@ export default {
   },
   methods: {
     listHubs () {
-      let token = this.$store.getters.token
       let requestOptions = {
-        headers: { 'Authorization': 'Bearer ' + token }
+        headers: authHeader()
       }
       console.log(requestOptions)
       let listHubsUrl = 'http://localhost:4444/listhubs'
@@ -68,16 +68,18 @@ export default {
 <style scoped>
 .lobby-container {
   height: 100%;
+  display: flex;
+  /* min-height: 98vh; */
+  flex-direction: column;
+  margin: 0;
 }
 
 .lobby-view {
-  height: 100%;
   background-color: rgb(0, 209, 178);
 }
 
 .chat-room {
   background-color: rgb(223, 223, 223);
-  margin-top: 12px;
 }
 
 .active {
@@ -88,9 +90,10 @@ export default {
   height: 100%;
 }
 
-.columns {
-  margin-left: 0px;
-  margin-right: 0px;
+.site-meat {
+  flex: 1;
+  overflow: hidden;
+  margin: 0;
 }
 
 </style>

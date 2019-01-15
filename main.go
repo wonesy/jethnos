@@ -19,7 +19,7 @@ func handleFunc(w http.ResponseWriter, r *http.Request) {
 // StartServer ...
 func StartServer() {
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   []string{"http://localhost:*"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "HEAD", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization"},

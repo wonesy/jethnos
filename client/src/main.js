@@ -57,9 +57,6 @@ export function authHeader () {
   // return authorization header with jwt token
   let token = store.getters.token
 
-  console.log('yoooooooooooo')
-  console.log(token)
-
   if (token) {
     return { 'Authorization': 'Bearer ' + token }
   } else {

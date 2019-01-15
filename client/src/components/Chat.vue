@@ -1,6 +1,6 @@
 <template>
-<div class="chat-container box">
-  <div id="chatbox" class="messages box">
+<div class="chat-container">
+  <div id="chatbox" class="messages">
     <Message
       v-for="(msg,index) in messages"
       :key="index"
@@ -10,7 +10,7 @@
   <footer class="footers">
     <div class="field has-addons">
       <p class="control is-expanded">
-        <input v-model="chatText" class="input" type="text" placeholder="Type to chat">
+        <input v-model="chatText" v-on:keyup.enter="send" class="input" type="text" placeholder="Type to chat">
       </p>
       <p class="control">
         <a v-on:click="send" class="button is-primary">
@@ -95,6 +95,7 @@ export default {
 
       let data = JSON.stringify(chatMessage)
       this.ws.send(data)
+      this.chatText = ''
     },
     handleMessages (e) {
       var msg = JSON.parse(e.data.trim())
@@ -130,8 +131,8 @@ export default {
 <style scoped>
 .chat-container {
   display: flex;
-  /* min-height: 98vh; */
   height: 100%;
+  /* min-height: 98vh; */
   flex-direction: column;
 }
 
@@ -139,5 +140,9 @@ export default {
   flex: 1;
   overflow: hidden;
   overflow-y: scroll;
+}
+
+.footers {
+  padding: 12px;
 }
 </style>
