@@ -6,7 +6,6 @@ import VueLodash from 'vue-lodash'
 import App from './App'
 import router from './router'
 import './../node_modules/bulma/css/bulma.css'
-import './../node_modules/lodash'
 import VueResource from 'vue-resource'
 
 Vue.use(VueResource)
@@ -21,6 +20,9 @@ const store = new Vuex.Store({
     token: '',
     user: {
       handle: ''
+    },
+    game: {
+      tribes: []
     }
   },
   mutations: {
@@ -29,6 +31,9 @@ const store = new Vuex.Store({
     },
     SET_USER_HANDLE (state, handle) {
       state.user.handle = handle
+    },
+    ADD_GAME_TRIBE (state, tribe) {
+      state.game.tribes.push(tribe)
     }
   },
   actions: {
@@ -47,6 +52,9 @@ const store = new Vuex.Store({
     },
     setUserHandle ({commit}, handle) {
       commit('SET_USER_HANDLE', handle)
+    },
+    addTribe ({commit}, tribe) {
+      commit('ADD_GAME_TRIBE', tribe)
     }
   },
   getters: {
@@ -55,6 +63,9 @@ const store = new Vuex.Store({
     },
     userHandle: state => {
       return state.user.handle
+    },
+    gameTibes: state => {
+      return state.game.tribes
     }
   }
 })

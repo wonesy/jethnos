@@ -1,6 +1,6 @@
 <template>
 <div class="chat-container">
-  <div id="chatbox" class="messages">
+  <div id="chatbox-messages" class="messages">
     <Message
       v-for="(msg,index) in messages"
       :key="index"
@@ -86,6 +86,18 @@ export default {
 
         let data = JSON.stringify(message)
         this.ws.send(data)
+
+        // inform channel that a new user has joined
+        let msg = '' + this.$store.getters.userHandle + ' has joined the channel'
+        let sysMsg = {
+          'type': 'chat',
+          'data': {
+            'name': 'System',
+            'text': msg,
+            'sender': 'System'
+          }
+        }
+        this.ws.send(JSON.stringify(sysMsg))
       }
     },
     newHandle: {
@@ -93,8 +105,11 @@ export default {
       handler: function (val, oldVal) {
         if (val !== oldVal) {
           this.handle = val
-          let sysMsg = '' + oldVal + ' has changed their name to ' + val
-          this.sendAdminMessage(sysMsg)
+
+          if (this.ws !== null) {
+            let sysMsg = '' + oldVal + ' has changed their name to ' + val
+            this.sendAdminMessage(sysMsg)
+          }
         }
       }
     }
@@ -150,8 +165,8 @@ export default {
       this.messages.push(msgProps)
 
       this.$nextTick(() => {
-        let e = document.getElementById('chatbox')
-        e.scrollTop = e.scrollHeight
+        let elem = document.getElementById('chatbox-messages')
+        elem.scrollTop = elem.scrollHeight
       })
     }
   }
@@ -168,12 +183,17 @@ export default {
 }
 
 .messages {
-  flex: 1;
+  flex-grow: 1;
   overflow: hidden;
   overflow-y: scroll;
+  padding-bottom: 60px;
 }
 
 .footers {
+  bottom: 0;
+  position: static;
   padding: 12px;
+  height: 60px;
+  flex-grow: 0;
 }
 </style>

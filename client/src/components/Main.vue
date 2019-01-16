@@ -13,13 +13,15 @@
 import Banner from './Banner'
 import Lobby from './Lobby'
 import User from './User'
+import CreateGame from './CreateGame'
 
 export default {
   name: 'Main',
   components: {
     Banner,
     Lobby,
-    User
+    User,
+    CreateGame
   },
   data () {
     return {
@@ -37,6 +39,8 @@ export default {
         this.currentTabComponent = Lobby
       } else if (tab === 'user') {
         this.currentTabComponent = User
+      } else if (tab === 'create') {
+        this.currentTabComponent = CreateGame
       }
     }
   }

@@ -6,6 +6,9 @@
           <a v-on:click="$emit('change-tab', 'lobby')">Lobby</a>
         </li>
         <li>
+          <a v-on:click="$emit('change-tab', 'create')">Create Game</a>
+        </li>
+        <li>
           <a v-on:click="$emit('change-tab', 'user')">User</a>
         </li>
       </ul>
