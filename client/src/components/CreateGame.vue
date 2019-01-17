@@ -18,7 +18,14 @@
       </div>
     </div>
 
-    <div class="choose-dictator-cards"></div>
+    <div v-if="gameMode=='Democratic'" class="notification is-warning">
+        You are a trusting leader. A vote for tribes will be held.
+    </div>
+    <div v-else class="choose-dictator-cards">
+      <keep-alive>
+        <TribeSelect/>
+      </keep-alive>
+    </div>
 
     <div class="field">
       <label class="label">Message</label>
@@ -61,8 +68,13 @@
 </template>
 
 <script>
+import TribeSelect from './TribeSelect'
+
 export default {
   name: 'CreateGame',
+  components: {
+    TribeSelect
+  },
   data () {
     return {
       modeOptions: ['Democratic', 'Dictatorship'],
@@ -80,7 +92,7 @@ export default {
 <style scoped>
 .main {
   height: 100%;
-  min-width: 250px;
+  min-width: 500px;
   max-width: 500px;
 }
 </style>
