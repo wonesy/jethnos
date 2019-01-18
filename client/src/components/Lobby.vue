@@ -10,7 +10,7 @@
             v-on:click='activeHub=hub.uuid'
             v-bind:class="{active: activeHub===hub.uuid}"
           >
-            {{hub.uuid}}
+            {{hub.name}}
           </a>
         </div>
       </div>
@@ -24,7 +24,6 @@
 <script>
 import Chat from './Chat'
 import { mapGetters } from 'vuex'
-import { authHeader } from '../main.js'
 
 export default {
   name: 'Lobby',
@@ -45,20 +44,24 @@ export default {
   created () {
     this.$store.dispatch('fetchToken').then(() => {
       console.log('finished with the token fetching')
-      this.listHubs()
+      this.reload()
     })
   },
   methods: {
     listHubs () {
-      let requestOptions = {
-        headers: authHeader()
-      }
-      console.log(requestOptions)
       let listHubsUrl = 'http://localhost:4444/listhubs'
-      this.$http.get(listHubsUrl, requestOptions)
+      this.$http.get(listHubsUrl)
         .then(stream => stream.json())
         .then(data => (this.hubs = data))
         .catch(error => console.log(error))
+    },
+    reload () {
+      var vm = this
+      var reload = function () {
+        vm.listHubs()
+        setTimeout(reload, 300000) // every 30 seconds
+      }
+      setTimeout(reload, 300000)
     }
   }
 }
@@ -94,6 +97,10 @@ export default {
   flex: 1;
   overflow: hidden;
   margin: 0;
+}
+
+.join-chat-btn {
+  color: black;
 }
 
 </style>

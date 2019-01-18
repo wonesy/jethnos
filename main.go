@@ -22,7 +22,7 @@ func StartServer() {
 		AllowedOrigins:   []string{"http://localhost:*"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "HEAD", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		// Enable Debugging for testing, consider disabling in production
 		Debug: true,
 	})
@@ -36,7 +36,7 @@ func StartServer() {
 
 	// routes specific for chat
 	authRouter := mux.NewRouter()
-	authRouter.HandleFunc("/listhubs", ListHubHandler)
+	router.HandleFunc("/listhubs", ListHubHandler)
 
 	// auth negroni just for authRouter
 	an := negroni.New(

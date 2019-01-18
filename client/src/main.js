@@ -22,6 +22,7 @@ const store = new Vuex.Store({
       handle: ''
     },
     game: {
+      name: '',
       tribes: []
     }
   },
@@ -79,13 +80,11 @@ new Vue({
   template: '<App/>'
 })
 
-export function authHeader () {
-  // return authorization header with jwt token
+Vue.http.interceptors.push(function (request) {
   let token = store.getters.token
 
   if (token) {
-    return { 'Authorization': 'Bearer ' + token }
-  } else {
-    return {}
+    // modify headers
+    request.headers.set('Authorization', 'Bearer ' + token)
   }
-}
+})

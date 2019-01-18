@@ -3,7 +3,7 @@
     <div class="field">
       <label class="label">Name</label>
       <div class="control">
-        <input class="input" type="text" placeholder="Enter game name">
+        <input class="input" type="text" v-model="gameName" placeholder="Enter game name">
       </div>
     </div>
 
@@ -18,47 +18,18 @@
       </div>
     </div>
 
-    <div v-if="gameMode=='Democratic'" class="notification is-warning">
+    <div v-if="gameMode=='Democracy'" class="notification is-warning">
         You are a trusting leader. A vote for tribes will be held.
     </div>
     <div v-else class="choose-dictator-cards">
       <keep-alive>
-        <TribeSelect/>
+        <TribeSelect v-bind:submit="submit" v-on:is-valid="broadcastNewGame"/>
       </keep-alive>
-    </div>
-
-    <div class="field">
-      <label class="label">Message</label>
-      <div class="control">
-        <textarea class="textarea" placeholder="Textarea"></textarea>
-      </div>
-    </div>
-
-    <div class="field">
-      <div class="control">
-        <label class="checkbox">
-          <input type="checkbox">
-          I agree to the <a href="#">terms and conditions</a>
-        </label>
-      </div>
-    </div>
-
-    <div class="field">
-      <div class="control">
-        <label class="radio">
-          <input type="radio" name="question">
-          Yes
-        </label>
-        <label class="radio">
-          <input type="radio" name="question">
-          No
-        </label>
-      </div>
     </div>
 
     <div class="field is-grouped">
       <div class="control">
-        <button class="button is-link">Submit</button>
+        <button class="button is-link" v-on:click="submitGame">Submit</button>
       </div>
       <div class="control">
         <button class="button is-text">Cancel</button>
@@ -77,13 +48,48 @@ export default {
   },
   data () {
     return {
-      modeOptions: ['Democratic', 'Dictatorship'],
-      gameMode: 'Democratic'
+      gameName: '',
+      modeOptions: ['Democracy', 'Dictatorship'],
+      gameMode: 'Democracy',
+      submit: false,
+      newHubUUID: ''
     }
   },
   methods: {
     changeGameMode: function () {
       console.log(this.gameMode)
+    },
+    submitGame: function () {
+      if (this.gameMode === 'Democracy') {
+        // send game data to the store
+        console.log('submitting democratic game')
+        this.broadcastNewGame(true, this.gameName, null)
+      } else {
+        this.submit = true
+      }
+    },
+    broadcastNewGame: function (isValid, name, tribeList) {
+      // reset the submit value if the init settings are invalid
+      if (!isValid) {
+        this.submit = false
+        return
+      }
+
+      if (!name || name === '') {
+        this.submit = false
+        return
+      }
+
+      // if we're here, then the settings are valid and we can save the information to the store
+      // let requestOptions = {
+      //   headers: authHeader()
+      // }
+
+      let newHubUrl = 'http://localhost:4444/createhub'
+      this.$http.post(newHubUrl, {name: name})
+        .then(stream => stream.json())
+        .then(data => (this.newHubUUID = data))
+        .catch(error => console.log(error))
     }
   }
 }
@@ -91,8 +97,9 @@ export default {
 
 <style scoped>
 .main {
+  margin-top: 20px;
   height: 100%;
-  min-width: 500px;
-  max-width: 500px;
+  min-width: 250px;
+  max-width: 1200px;
 }
 </style>

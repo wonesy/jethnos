@@ -14,7 +14,7 @@
         </li>
       </ul>
     </div>
-    <div v-if="activeTribe!==null" class="box">
+    <div v-if="activeTribe!==null" class="tribe-description box">
       <p>{{activeTribe.power}}</p>
       <br>
       <a v-if="isSelected"
@@ -33,13 +33,18 @@ import {JethnosTribes} from '../jethnos_rules/tribes.js'
 
 export default {
   name: 'TribeSelect',
-  components: {
+  props: {
+    submit: {
+      type: Boolean
+    }
   },
   data () {
     return {
       allTribes: JethnosTribes,
       activeTribe: null,
-      selectedTribes: []
+      selectedTribes: [],
+      errorMsg: null,
+      warningMsg: null
     }
   },
   computed: {
@@ -56,6 +61,32 @@ export default {
     },
     maxSelected: function () {
       return this.numSelected >= 6
+    }
+  },
+  watch: {
+    submit: {
+      immediate: false,
+      handler: function (val, oldVal) {
+        const MAX_TRIBES = 6
+        if (val === false) {
+          return
+        }
+
+        // user has requested to submit a new game with these settings
+        if (this.numSelected > MAX_TRIBES) {
+          this.errorMsg = 'Too many tribes are chosen. Required = ' + MAX_TRIBES
+          this.$emit('is-valid', false, null, null)
+          return
+        }
+
+        if (this.numSelected < MAX_TRIBES) {
+          this.errorMsg = 'Too few tribes are chosen. Required = ' + MAX_TRIBES
+          this.$emit('is-valid', false, null, null)
+          return
+        }
+
+        this.$emit('is-valid', true, this.name, this.selectedTribes)
+      }
     }
   },
   methods: {
@@ -95,5 +126,9 @@ export default {
 
 .glow a {
   color:goldenrod !important;
+}
+
+.tribe-description {
+  margin-bottom: 20px;
 }
 </style>

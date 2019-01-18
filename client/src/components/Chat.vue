@@ -166,7 +166,9 @@ export default {
 
       this.$nextTick(() => {
         let elem = document.getElementById('chatbox-messages')
-        elem.scrollTop = elem.scrollHeight
+        if (elem) {
+          elem.scrollTop = elem.scrollHeight
+        }
       })
     }
   }

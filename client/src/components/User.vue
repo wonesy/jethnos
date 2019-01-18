@@ -77,6 +77,7 @@ export default {
 
 <style scoped>
 .user-container {
+  margin-top: 20px;
   min-width: 250px;
   max-width: 500px;
 }
