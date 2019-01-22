@@ -22,21 +22,19 @@ func StartServer() {
 		AllowedOrigins:   []string{"http://localhost:*"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "HEAD", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowedHeaders:   []string{"Authorization"},
 		// Enable Debugging for testing, consider disabling in production
 		Debug: true,
 	})
 
 	// basic, no auth routes
 	router := mux.NewRouter()
-	router.HandleFunc("/", handleFunc)
-	router.HandleFunc("/ws", ClientWebsocketHandler)
-	router.HandleFunc("/gettoken", GetTokenHandler)
-	router.HandleFunc("/createhub", CreateHubHandler) // tmpry for dev work
+	router.HandleFunc("/", handleFunc).Methods("GET")
+	router.HandleFunc("/game/list", ListGamesHandler).Methods("GET")
+	router.HandleFunc("/game/new", NewGameHandler).Methods("POST")
 
 	// routes specific for chat
 	authRouter := mux.NewRouter()
-	router.HandleFunc("/listhubs", ListHubHandler)
 
 	// auth negroni just for authRouter
 	an := negroni.New(
@@ -47,7 +45,7 @@ func StartServer() {
 
 	router.PathPrefix("/").Handler(an)
 
-	n := negroni.New()
+	n := negroni.Classic()
 	n.Use(c)
 	n.UseHandler(router)
 

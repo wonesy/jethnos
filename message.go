@@ -1,37 +1,25 @@
 package main
 
-// Message ...
-type Message struct {
-	Type string      `json:"type"`
-	Data interface{} `json:"data"`
-}
-
-// JoinMessage ...
-type JoinMessage struct {
-	Type string          `json:"type"`
-	Data JoinMessageData `json:"data"`
-}
-
-// JoinMessageData ...
-type JoinMessageData struct {
-	HubUUID string `json:"hubUUID"`
+// SocketMessage ...
+type SocketMessage struct {
+	Type string `json:"type"`
+	Data interface{}
 }
 
 // ChatMessage ...
 type ChatMessage struct {
-	Type string          `json:"type"`
-	Data ChatMessageData `json:"data"`
-}
-
-// ChatMessageData ...
-type ChatMessageData struct {
-	Name       string `json:"name"`
+	Type       string `json:"type"`
+	SenderUUID string `json:"uuid"`
 	Text       string `json:"text"`
-	SenderUUID string `json:"sender"`
 }
 
-// WhoAmIData ...
-type WhoAmIData struct {
-	Type   string `json:"type"`
-	Sender string `json:"uuid"`
+// MoveMessage ...
+type MoveMessage struct {
+	Type string `json:"type"`
+}
+
+// JoinGameMessage ...
+type JoinGameMessage struct {
+	Type     string `json:"type"`
+	GameUUID string `json:"uuid"`
 }

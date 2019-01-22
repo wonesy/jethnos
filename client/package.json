@@ -1,7 +1,7 @@
 {
   "name": "client",
   "version": "1.0.0",
-  "description": "A Vue.js project",
+  "description": "ethnos",
   "author": "Cameron Jones <camandrewjones@gmail.com>",
   "private": true,
   "scripts": {
@@ -12,15 +12,15 @@
   },
   "dependencies": {
     "bulma": "^0.7.2",
-    "es6-promise": "^4.2.5",
-    "jshint": "^2.9.7",
     "vue": "^2.5.2",
+    "vue-carousel": "^0.17.0",
     "vue-lodash": "^2.0.0",
     "vue-resource": "^1.5.1",
     "vue-router": "^3.0.1",
-    "vuex": "^3.0.1"
+    "vuex": "^3.1.0"
   },
   "devDependencies": {
+    "@fortawesome/fontawesome-free": "^5.6.3",
     "autoprefixer": "^7.1.2",
     "babel-core": "^6.22.1",
     "babel-eslint": "^8.2.1",

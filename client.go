@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -14,11 +13,143 @@ import (
 
 // Client ...
 type Client struct {
-	id   uuid.UUID
-	send chan ChatMessageData
-	hub  *Hub
-	conn *websocket.Conn
+	UUID   uuid.UUID
+	Socket *websocket.Conn
+	Game   *Game
+	Chat   chan ChatMessage
 }
+
+var logger = GetLogger()
+
+// NewClient ...
+func NewClient() *Client {
+	uuid, err := uuid.NewUUID()
+	if err != nil {
+		logger.Error("could not create uuid")
+		return nil
+	}
+
+	return &Client{
+		UUID:   uuid,
+		Socket: nil,
+		Game:   nil,
+		Chat:   make(chan ChatMessage),
+	}
+}
+
+func (c *Client) registerGame(gameUUID string) error {
+	game, err := GetGameFromUUID(gameUUID)
+	if err != nil {
+		logger.Error(err.Error())
+		return err
+	}
+
+	c.Game = game
+	game.Register <- c
+
+	return nil
+}
+
+func (c *Client) socketWriter() {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		c.Socket.Close()
+	}()
+
+	for {
+		select {
+		// chat message received, broadcast via Game ChatBroadcast
+		case msg, ok := <-c.Chat:
+			c.Socket.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				// the game close the channel
+				c.Socket.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+
+			err := c.Socket.WriteJSON(msg)
+			if err != nil {
+				logger.Error("failure to write chat msg to ws")
+			}
+		case <-ticker.C:
+			c.Socket.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.Socket.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		}
+	}
+}
+
+func (c *Client) socketReader() {
+	defer func() {
+		if c.Game != nil {
+			c.Game.Unregister <- c
+		}
+		close(c.Chat)
+	}()
+
+	// setup default config for the socket reads
+	c.Socket.SetReadLimit(maxMessageSize)
+	c.Socket.SetReadDeadline(time.Now().Add(pongWait))
+	c.Socket.SetPongHandler(func(string) error {
+		c.Socket.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
+	socketMsg := SocketMessage{}
+	joinGameMsg := JoinGameMessage{}
+	chatMsg := ChatMessage{}
+
+	for {
+		// read message from socket
+		_, msg, err := c.Socket.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
+			break
+		}
+
+		logger.Info("received message from client")
+
+		err = json.Unmarshal(msg, &socketMsg)
+		if err != nil {
+			logger.Error("could not read message in websocket")
+			continue
+		}
+
+		// do something with this later
+		switch socketMsg.Type {
+		case "chat":
+			logger.Info("sending chat message")
+			err = json.Unmarshal(msg, &chatMsg)
+			if err != nil {
+				logger.Error(err.Error())
+				continue
+			}
+			c.Game.ChatBroadcast <- chatMsg
+		case "join":
+			logger.Info("joining game")
+			err = json.Unmarshal(msg, &joinGameMsg)
+			if err != nil {
+				logger.Error(err.Error())
+				continue
+			}
+			err = c.registerGame(joinGameMsg.GameUUID)
+			if err != nil {
+				logger.Error(err.Error())
+				continue
+			}
+		default:
+			logger.Warn("dropping message of unknown type")
+		}
+	}
+}
+
+//
+// Web handlers below
+//
 
 const (
 	// Time allowed to write a message to the peer.
@@ -32,12 +163,6 @@ const (
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
-)
-
-// conveniences
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
 )
 
 var (
@@ -54,150 +179,25 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// ClientWebsocketHandler handles websocket requests from the peer.
-func ClientWebsocketHandler(w http.ResponseWriter, r *http.Request) {
+// ClientWebSocketHandler ...
+func ClientWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Println(err)
+		logger.Error(err.Error())
+		InternalServerErrorResponse(w, []byte(err.Error()))
 		return
 	}
 
-	uuid, err := uuid.NewUUID()
-	if err != nil {
-		fmt.Println(err)
+	client := NewClient()
+	if client == nil {
+		msg := "unable to create client"
+		logger.Error(msg)
+		InternalServerErrorResponse(w, []byte(msg))
 		return
 	}
 
-	client := &Client{
-		id:   uuid,
-		hub:  nil,
-		conn: conn,
-		send: make(chan ChatMessageData, 256),
-	}
+	client.Socket = conn
 
-	go client.writePipe()
-	go client.readPipe()
-}
-
-// RegisterWithHub ...
-func (c *Client) RegisterWithHub(hubUUID string) {
-	hub, err := GetHubFromUUID(hubUUID)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	c.hub = hub
-	hub.Register <- c
-}
-
-// BuildWhoAmI ...
-func BuildWhoAmI(c *Client) WhoAmIData {
-	return WhoAmIData{
-		Type:   "whoami",
-		Sender: c.id.String(),
-	}
-}
-
-func (c *Client) readPipe() {
-	// read from the websocket
-	defer func() {
-		if c.hub != nil {
-			c.hub.Unregister <- c
-		}
-		close(c.send)
-	}()
-
-	// setup default config for the socket reads
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
-
-	readMsg := Message{}
-	joinMsg := JoinMessage{}
-	chatMsg := ChatMessage{}
-
-	for {
-		// read message from socket
-		_, msg, err := c.conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
-			break
-		}
-
-		fmt.Println("Received message from client")
-
-		err = json.Unmarshal(msg, &readMsg)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		// ensure that we cannot send messages to hub that don't yet exist
-		if c.hub == nil && readMsg.Type == "chat" {
-			fmt.Println("Cannot send commands to the hub before joining one")
-			continue
-		}
-
-		switch readMsg.Type {
-		case "join":
-			fmt.Println("Joining hub...")
-			err = json.Unmarshal(msg, &joinMsg)
-			if err != nil {
-				fmt.Println(err)
-			}
-			c.RegisterWithHub(joinMsg.Data.HubUUID)
-		case "chat":
-			fmt.Println("Sending chat message...")
-			err = json.Unmarshal(msg, &chatMsg)
-			if err != nil {
-				fmt.Println(err)
-			}
-			c.hub.Broadcast <- chatMsg.Data
-		case "whoami":
-			fmt.Println("Client is requesting their id...")
-			c.conn.WriteJSON(BuildWhoAmI(c))
-		default:
-			fmt.Println("Dropping message of unknown type")
-		}
-	}
-}
-
-func (c *Client) writePipe() {
-	// write to the websocket
-	ticker := time.NewTicker(pingPeriod)
-	defer func() {
-		ticker.Stop()
-		c.conn.Close()
-	}()
-
-	for {
-		select {
-		case msg, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-
-			err := c.conn.WriteJSON(msg)
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			// Add queued chat messages to the current websocket message.
-			// n := len(c.send)
-			// for i := 0; i < n; i++ {
-			// 	c.conn.WriteJSON(<-c.send)
-			// }
-
-		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return
-			}
-		}
-	}
+	go client.socketReader()
+	go client.socketWriter()
 }
