@@ -1,6 +1,8 @@
 <template>
 <div>
-  <h1><strong>Create new game</strong></h1>
+  <div class="notification is-warning">
+    Create a new game
+  </div>
   <div class="field">
     <label class="label">Game name</label>
     <div class="control">
@@ -28,15 +30,12 @@
     the game starts
   </div>
   <div v-else>
-    <tribe-choose></tribe-choose>
+    <tribe-choose v-on:update-tribes="updateTribes"></tribe-choose>
   </div>
 
   <div class="field is-grouped">
     <div class="control">
-      <button class="button is-link">Submit</button>
-    </div>
-    <div class="control">
-      <button class="button is-text">Cancel</button>
+      <button class="button is-link" :disabled="!gameValid">Submit</button>
     </div>
   </div>
 </div>
@@ -54,7 +53,26 @@ export default {
     return {
       gameName: '',
       gameModes: ['Democracy', 'Dictatorship'],
-      selected: 'Democracy'
+      selected: 'Democracy',
+      submitIsDisabled: true,
+      selectedTribes: []
+    }
+  },
+  computed: {
+    gameValid: function () {
+      let nameValid = (this.gameName !== '')
+      let modeValid = (this.selected === 'Democracy' || this.selectedTribes.length === 6)
+
+      if (nameValid && modeValid) {
+        return true
+      }
+      return false
+    }
+  },
+  methods: {
+    updateTribes: function (tribes) {
+      console.log('yo')
+      this.selectedTribes = tribes
     }
   }
 }

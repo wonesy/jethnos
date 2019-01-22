@@ -1,6 +1,6 @@
 <template>
 <div class="container choose-container">
-  <progress id="tribeProgress" class="progress" 
+  <progress id="tribeProgress" class="progress"
     :class="{'is-success': numSelectedTribes===6}" value="0" max="6"></progress>
   <div class="field is-grouped is-grouped-multiline">
     <div
@@ -54,7 +54,7 @@ export default {
       if (this.inspectedTribe === null) {
         return 'Click on a tribe to see their power'
       }
-      return this.inspectedTribe.power
+      return '' + this.inspectedTribe.name + ': ' + this.inspectedTribe.power
     }
   },
   methods: {
@@ -66,6 +66,7 @@ export default {
         if (this.numSelectedTribes > 0) {
           this.numSelectedTribes -= 1
         }
+        this.removeTribe(tribe)
         tribe.selected = false
       } else {
         if (this.numSelectedTribes === 6) {
@@ -73,8 +74,10 @@ export default {
           return
         }
         this.numSelectedTribes += 1
+        this.addTribe(tribe)
         tribe.selected = true
       }
+      this.$emit('update-tribes', this.selectedTribes)
       this.updateProgressBar()
     },
     updateProgressBar: function () {
@@ -83,6 +86,19 @@ export default {
         return
       }
       elem.value = this.numSelectedTribes
+    },
+    addTribe: function (tribe) {
+      if (this.selectedTribes.indexOf(tribe) > -1) {
+        return
+      }
+      this.selectedTribes.push(tribe)
+    },
+    removeTribe: function (tribe) {
+      let idx = this.selectedTribes.indexOf(tribe)
+      if (idx <= -1) {
+        return
+      }
+      this.selectedTribes.splice(idx, 1)
     }
   }
 }

@@ -16,7 +16,7 @@
 
     <!-- Body -->
     <div class="lobby-body columns">
-      <div class="column is-one-third">
+      <div class="column is-one-third no-top-margin">
         <a class="button is-primary is-medium is-fullwidth btn-newgame"
           @click="setCurrentTab('createGame')">
           New Game</a>
@@ -153,7 +153,7 @@ export default {
 .games-list-col {
   overflow: auto;
   /* hero (160) + newgamebtn (10+30) */
-  max-height: calc(100vh - 240px);
+  max-height: calc(100vh - 230px);
 }
 
 .stats-col {
@@ -163,5 +163,10 @@ export default {
 
 .btn-newgame {
   margin-bottom: 10px;
+}
+
+.no-top-margin {
+  margin-top: 0 !important;
+  padding-top: 0;
 }
 </style>
