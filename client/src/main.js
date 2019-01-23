@@ -6,6 +6,7 @@ import VueLodash from 'vue-lodash'
 import App from './App'
 import router from './router'
 import './../node_modules/bulma/css/bulma.css'
+import './../node_modules/@fortawesome/fontawesome-free/css/all.css'
 import VueResource from 'vue-resource'
 
 Vue.use(VueResource)
