@@ -69,6 +69,30 @@ var Troll = Tribe{
 	"Take an unclaimed Troll token with a value up to X",
 }
 
+var ErrorTribe = Tribe{
+	"Error",
+	"Error",
+}
+
+func findTribeByName(name string) Tribe {
+	for _, tribe := range AllTribes() {
+		if tribe.Name == name {
+			return tribe
+		}
+	}
+	return ErrorTribe
+}
+
+// BuildTribeList ...
+func BuildTribeList(nameList []string) []Tribe {
+	tribes := []Tribe{}
+	for _, name := range nameList {
+		tribe := findTribeByName(name)
+		tribes = append(tribes, tribe)
+	}
+	return tribes
+}
+
 // AllTribes ...
 func AllTribes() []Tribe {
 	return []Tribe{

@@ -19,7 +19,9 @@ Vue.config.productionTip = false
 const store = new Vuex.Store({
   state: {
     token: '',
+    websocket: null,
     user: {
+      clientUUID: '',
       handle: ''
     },
     game: {
@@ -34,8 +36,11 @@ const store = new Vuex.Store({
     SET_USER_HANDLE (state, handle) {
       state.user.handle = handle
     },
-    ADD_GAME_TRIBE (state, tribe) {
-      state.game.tribes.push(tribe)
+    SET_USER_UUID (state, uuid) {
+      state.user.clientUUID = uuid
+    },
+    SET_WEBSOCKET (state, ws) {
+      state.websocket = ws
     }
   },
   actions: {
@@ -55,8 +60,28 @@ const store = new Vuex.Store({
     setUserHandle ({commit}, handle) {
       commit('SET_USER_HANDLE', handle)
     },
-    addTribe ({commit}, tribe) {
-      commit('ADD_GAME_TRIBE', tribe)
+    setWebsocket ({commit}) {
+      return new Promise((resolve, reject) => {
+        let ws = new WebSocket('ws://localhost:4444/ws')
+        ws.onopen = function (e) {
+          let msg = {
+            'type': 'whoami',
+            'data': ''
+          }
+          ws.send(JSON.stringify(msg))
+        }
+
+        ws.onmessage = function (e) {
+          let data = JSON.parse(e.data)
+          if (data.hasOwnProperty('uuid')) {
+            commit('SET_USER_UUID', data.uuid)
+          } else {
+            console.log('Error reading uuid in whoami request')
+          }
+        }
+        commit('SET_WEBSOCKET', ws)
+        resolve()
+      })
     }
   },
   getters: {
@@ -66,8 +91,14 @@ const store = new Vuex.Store({
     userHandle: state => {
       return state.user.handle
     },
+    userUUID: state => {
+      return state.user.clientUUID
+    },
     gameTibes: state => {
       return state.game.tribes
+    },
+    websocket: state => {
+      return state.websocket
     }
   }
 })

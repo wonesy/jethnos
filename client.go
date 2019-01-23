@@ -11,6 +11,19 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var (
+	// ErrorClientInvalidUUID ...
+	ErrorClientInvalidUUID = errors.New("Not a valid UUID")
+
+	// ErrorClientNotFound ...
+	ErrorClientNotFound = errors.New("Could not find requested client")
+)
+
+var logger = GetLogger()
+
+// GlobalClientMap ...
+var GlobalClientMap = make(map[uuid.UUID]*Client)
+
 // Client ...
 type Client struct {
 	UUID   uuid.UUID
@@ -19,7 +32,56 @@ type Client struct {
 	Chat   chan ChatMessage
 }
 
-var logger = GetLogger()
+// MarshalJSON ...
+func (c *Client) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		UUID string `json:"uuid"`
+	}{
+		c.UUID.String(),
+	})
+}
+
+// // UnmarshalJSON ...
+// func (c *Client) UnmarshalJSON(data []byte) error {
+// 	aux := struct {
+// 		UUID string `json:"uuid"`
+// 	}{}
+
+// 	if err := json.Unmarshal(data, &aux); err != nil {
+// 		return err
+// 	}
+
+// 	fmt.Println(aux.UUID)
+
+// 	c, err := GetClientFromUUID(aux.UUID)
+// 	if err != nil {
+// 		logger.Error(err.Error())
+// 		return err
+// 	}
+// 	return nil
+// }
+
+// GetClientFromUUID ...
+func GetClientFromUUID(clientUUID string) (*Client, error) {
+	// ensure that the UUID existed in the get params
+	if len(clientUUID) == 0 {
+		return nil, ErrorClientInvalidUUID
+	}
+
+	// ensure it's a valid UUID format
+	parsedClientUUID, err := uuid.Parse(clientUUID)
+	if err != nil {
+		return nil, ErrorClientInvalidUUID
+	}
+
+	// ensure that this UUID exists in
+	client, ok := GlobalClientMap[parsedClientUUID]
+	if !ok {
+		return nil, ErrorClientNotFound
+	}
+
+	return client, nil
+}
 
 // NewClient ...
 func NewClient() *Client {
@@ -29,12 +91,14 @@ func NewClient() *Client {
 		return nil
 	}
 
-	return &Client{
+	c := &Client{
 		UUID:   uuid,
 		Socket: nil,
 		Game:   nil,
 		Chat:   make(chan ChatMessage),
 	}
+
+	return c
 }
 
 func (c *Client) registerGame(gameUUID string) error {
@@ -87,6 +151,7 @@ func (c *Client) socketReader() {
 			c.Game.Unregister <- c
 		}
 		close(c.Chat)
+		delete(GlobalClientMap, c.UUID)
 	}()
 
 	// setup default config for the socket reads
@@ -141,6 +206,16 @@ func (c *Client) socketReader() {
 				logger.Error(err.Error())
 				continue
 			}
+		case "whoami":
+			logger.Info("client is requesting a whoami")
+			chatMsg.Type = "whoami"
+			chatMsg.SenderUUID = c.UUID.String()
+			chatMsg.Text = ""
+			err := c.Socket.WriteJSON(chatMsg)
+			if err != nil {
+				logger.Error("could not write whoami response to client")
+			}
+
 		default:
 			logger.Warn("dropping message of unknown type")
 		}
@@ -195,6 +270,9 @@ func ClientWebSocketHandler(w http.ResponseWriter, r *http.Request) {
 		InternalServerErrorResponse(w, []byte(msg))
 		return
 	}
+
+	GlobalClientMap[client.UUID] = client
+	logger.Info("Added new client to global list with uuid: " + client.UUID.String())
 
 	client.Socket = conn
 

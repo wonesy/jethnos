@@ -82,24 +82,25 @@ export default {
         {'uuid': 'bbbb-bbbb', 'name': 'game1', 'numClients': 1, 'isStarted': false, 'mode': 1},
         {'uuid': 'cccc-cccc', 'name': 'game2', 'numClients': 7, 'isStarted': false, 'mode': 2},
         {'uuid': 'dddd-dddd', 'name': 'game3', 'numClients': 5, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-dd5d', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-dd6d', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-dd7d', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-dd8d', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-dd9d', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-dd2d', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-dd3d', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-4ddd', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-5ddd', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-7ddd', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-9ddd', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0},
-        {'uuid': 'dddd-2ddd', 'name': 'game3', 'numClients': 0, 'isStarted': false, 'mode': 0}
+        {'uuid': 'dddd-dd5d', 'name': 'game4', 'numClients': 0, 'isStarted': false, 'mode': 0},
+        {'uuid': 'dddd-dd6d', 'name': 'game5', 'numClients': 0, 'isStarted': false, 'mode': 1},
+        {'uuid': 'dddd-dd7d', 'name': 'game6', 'numClients': 0, 'isStarted': false, 'mode': 1},
+        {'uuid': 'dddd-dd8d', 'name': 'game7', 'numClients': 0, 'isStarted': false, 'mode': 1},
+        {'uuid': 'dddd-dd9d', 'name': 'game8', 'numClients': 0, 'isStarted': false, 'mode': 0},
+        {'uuid': 'dddd-dd2d', 'name': 'game9', 'numClients': 0, 'isStarted': false, 'mode': 0},
+        {'uuid': 'dddd-dd3d', 'name': 'game10', 'numClients': 0, 'isStarted': false, 'mode': 0},
+        {'uuid': 'dddd-4ddd', 'name': 'game11', 'numClients': 0, 'isStarted': false, 'mode': 0},
+        {'uuid': 'dddd-5ddd', 'name': 'game12', 'numClients': 0, 'isStarted': false, 'mode': 0},
+        {'uuid': 'dddd-7ddd', 'name': 'game33', 'numClients': 0, 'isStarted': false, 'mode': 0},
+        {'uuid': 'dddd-9ddd', 'name': 'game34', 'numClients': 0, 'isStarted': false, 'mode': 0},
+        {'uuid': 'dddd-2ddd', 'name': 'game123', 'numClients': 0, 'isStarted': false, 'mode': 0}
       ],
       selectedGame: null
     }
   },
   created () {
     // this.$store.dispatch('fetchToken')
+    this.$store.dispatch('setWebsocket')
   },
   methods: {
     selectGame: function (game) {

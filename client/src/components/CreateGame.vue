@@ -35,7 +35,7 @@
 
   <div class="field is-grouped">
     <div class="control">
-      <button class="button is-link" :disabled="!gameValid">Submit</button>
+      <button class="button is-link" :disabled="!gameValid" @click="createNewGame">Submit</button>
     </div>
   </div>
 </div>
@@ -71,8 +71,17 @@ export default {
   },
   methods: {
     updateTribes: function (tribes) {
-      console.log('yo')
       this.selectedTribes = tribes
+    },
+    createNewGame: function () {
+      let postData = {
+        'name': this.gameName,
+        'uuid': this.$store.getters.userUUID,
+        'tribes': this.selectedTribes,
+        'mode': this.selected
+      }
+
+      this.$http.post('http://localhost:4444/game/new', postData)
     }
   }
 }

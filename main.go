@@ -22,7 +22,7 @@ func StartServer() {
 		AllowedOrigins:   []string{"http://localhost:*"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "HEAD", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		// Enable Debugging for testing, consider disabling in production
 		Debug: true,
 	})
@@ -30,6 +30,7 @@ func StartServer() {
 	// basic, no auth routes
 	router := mux.NewRouter()
 	router.HandleFunc("/", handleFunc).Methods("GET")
+	router.HandleFunc("/ws", ClientWebSocketHandler).Methods("GET")
 	router.HandleFunc("/game/list", ListGamesHandler).Methods("GET")
 	router.HandleFunc("/game/new", NewGameHandler).Methods("POST")
 

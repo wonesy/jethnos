@@ -2,13 +2,34 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
-	"time"
 )
 
+func TestNewClient(t *testing.T) {
+	c := NewClient()
+
+	x, ok := GlobalClientMap[c.UUID]
+	if !ok || x != c {
+		t.Error("could not find new client in the global map")
+	}
+
+	delete(GlobalClientMap, c.UUID)
+
+	if _, ok := GlobalClientMap[c.UUID]; ok {
+		t.Error("should have deleted client from global map but it's still there")
+	}
+}
+
+func TestClientJSON(t *testing.T) {
+	c := NewClient()
+
+	_, err := json.Marshal(c)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+/*
 // TestNewHub ...
 func TestNewHub(t *testing.T) {
 	h := NewHub()
@@ -97,3 +118,4 @@ func TestNewClient(t *testing.T) {
 		t.Error("Spoke and hub IDs don't match")
 	}
 }
+*/

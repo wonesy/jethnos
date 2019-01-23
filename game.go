@@ -45,6 +45,9 @@ type Game struct {
 
 	// Boolean used to determine if the game has already started
 	GameStarted bool
+
+	// Used to keep specific parameters for this game
+	Parameters GameParameters
 }
 
 // MarshalJSON ...
@@ -85,7 +88,7 @@ func GetGameFromUUID(gameUUID string) (*Game, error) {
 }
 
 // NewGame ...
-func NewGame(name string) *Game {
+func NewGame(name string, params GameParameters) *Game {
 	uuid, err := uuid.NewUUID()
 	if err != nil {
 		logger.Error("could not create uuid")
@@ -100,6 +103,7 @@ func NewGame(name string) *Game {
 		Register:      make(chan *Client),
 		Unregister:    make(chan *Client),
 		GameStarted:   false,
+		Parameters:    params,
 	}
 
 	logger.Info("created new game: " + game.Name)
@@ -163,7 +167,10 @@ func ListGamesHandler(w http.ResponseWriter, r *http.Request) {
 func NewGameHandler(w http.ResponseWriter, r *http.Request) {
 	// read post data
 	type postData struct {
-		Name string `json:"name"`
+		Name   string   `json:"name"`
+		Leader string   `json:"uuid"`
+		Tribes []string `json:"tribes"`
+		Mode   string   `json:"mode"`
 	}
 
 	pd := postData{}
@@ -176,7 +183,16 @@ func NewGameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create a new game
-	game := NewGame(pd.Name)
+	leader, err := GetClientFromUUID(pd.Leader)
+	if err != nil {
+		logger.Error(err.Error())
+		BadRequestResponse(w, []byte("Could not create game"))
+		return
+	}
+
+	params := NewGameParams(leader, pd.Mode, pd.Tribes)
+
+	game := NewGame(pd.Name, params)
 
 	// put the new game into the global map
 	GlobalGameMap[game.UUID] = game
