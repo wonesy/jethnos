@@ -16,7 +16,7 @@
       </div>
     </div>
     <footer class="card-footer">
-      <a href="#" class="card-footer-item">Join</a>
+      <a href="#" class="card-footer-item" @click="emitJoinClick(data.uuid)">Join</a>
     </footer>
   </div>
   <header v-else class="card-header">
@@ -50,6 +50,11 @@ export default {
         return 'Unknown'
       }
       return str
+    }
+  },
+  methods: {
+    emitJoinClick: function (uuid) {
+      this.$emit('join-existing-game', uuid)
     }
   }
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 var (
@@ -204,4 +205,40 @@ func NewGameHandler(w http.ResponseWriter, r *http.Request) {
 	go game.launch()
 
 	JSONResponse(w, http.StatusOK, game)
+}
+
+// JoinGameHandler ...
+func JoinGameHandler(w http.ResponseWriter, r *http.Request) {
+	uuid := mux.Vars(r)["uuid"]
+
+	type postData struct {
+		ClientUUID string `json:"client"`
+	}
+
+	pd := postData{}
+	err := json.NewDecoder(r.Body).Decode(&pd)
+	if err != nil {
+		msg := "Invalid post data"
+		logger.Error(msg)
+		BadRequestResponse(w, []byte(msg))
+		return
+	}
+
+	logger.Info("Client is joining game " + uuid)
+
+	client, err := GetClientFromUUID(pd.ClientUUID)
+	if err != nil {
+		logger.Error(err.Error())
+		BadRequestResponse(w, []byte(err.Error()))
+		return
+	}
+
+	err = client.RegisterGame(uuid)
+	if err != nil {
+		logger.Error(err.Error())
+		BadRequestResponse(w, []byte(err.Error()))
+		return
+	}
+
+	OKResponse(w, []byte("successfully joined game"))
 }

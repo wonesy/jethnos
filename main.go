@@ -24,7 +24,7 @@ func StartServer() {
 		AllowedMethods:   []string{"GET", "POST", "HEAD", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		// Enable Debugging for testing, consider disabling in production
-		Debug: true,
+		Debug: false,
 	})
 
 	// basic, no auth routes
@@ -32,6 +32,7 @@ func StartServer() {
 	router.HandleFunc("/", handleFunc).Methods("GET")
 	router.HandleFunc("/ws", ClientWebSocketHandler).Methods("GET")
 	router.HandleFunc("/game/list", ListGamesHandler).Methods("GET")
+	router.HandleFunc("/game/join/{uuid}", JoinGameHandler).Methods("POST")
 	router.HandleFunc("/game/new", NewGameHandler).Methods("POST")
 
 	// routes specific for chat

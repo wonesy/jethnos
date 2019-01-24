@@ -101,7 +101,8 @@ func NewClient() *Client {
 	return c
 }
 
-func (c *Client) registerGame(gameUUID string) error {
+// RegisterGame ...
+func (c *Client) RegisterGame(gameUUID string) error {
 	game, err := GetGameFromUUID(gameUUID)
 	if err != nil {
 		logger.Error(err.Error())
@@ -163,7 +164,6 @@ func (c *Client) socketReader() {
 	})
 
 	socketMsg := SocketMessage{}
-	joinGameMsg := JoinGameMessage{}
 	chatMsg := ChatMessage{}
 
 	for {
@@ -194,18 +194,6 @@ func (c *Client) socketReader() {
 				continue
 			}
 			c.Game.ChatBroadcast <- chatMsg
-		case "join":
-			logger.Info("joining game")
-			err = json.Unmarshal(msg, &joinGameMsg)
-			if err != nil {
-				logger.Error(err.Error())
-				continue
-			}
-			err = c.registerGame(joinGameMsg.GameUUID)
-			if err != nil {
-				logger.Error(err.Error())
-				continue
-			}
 		case "whoami":
 			logger.Info("client is requesting a whoami")
 			chatMsg.Type = "whoami"

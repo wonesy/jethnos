@@ -47,7 +47,8 @@
         <keep-alive>
           <component
             v-bind:is="currentTabComponent"
-            :data="tabData">
+            :data="tabData"
+            v-on:join-existing-game="joinGame">
           </component>
         </keep-alive>
       </div>
@@ -77,27 +78,15 @@ export default {
         'createGame': CreateGame
       },
       currentTabComponent: GameDetails,
-      gamesList: [
-        {
-          'uuid': 'aaaa-aaaa',
-          'name': 'game0',
-          'numClients': 1,
-          'isStarted': false,
-          'params': {
-            'tribes': [],
-            'mode': 0,
-            'leader': {
-              'uuid': 'dddd-aaaa-cccc-eeee'
-            }
-          }
-        }
-      ],
+      gamesList: [],
       selectedGame: null
     }
   },
   created () {
     // this.$store.dispatch('fetchToken')
-    this.$store.dispatch('setWebsocket')
+    if (this.$store.getters.websocket === null) {
+      this.$store.dispatch('setWebsocket')
+    }
     this.getGameList()
   },
   watch: {
@@ -105,7 +94,7 @@ export default {
       if (val === null) {
         return
       }
-      this.joinGame(val)
+      this.joinGame(val.uuid)
     }
   },
   methods: {
@@ -129,10 +118,16 @@ export default {
         .then(data => (this.gamesList = data))
     },
     joinGame: function (gameUUID) {
-      // mark that shit as joined
-      // set the screen accordingly
-      console.log('we have joined a brand new game')
-      this.$router.go({name: 'game', params: {gameID: gameUUID}})
+      let postData = {
+        'client': this.$store.getters.userUUID
+      }
+      this.$http.post('http://localhost:4444/game/join/' + gameUUID, postData)
+        .then(function (data) {
+          console.log(data)
+          if (data.status !== 200) throw data.bodyText
+          this.$router.push({name: 'game', params: {gameID: gameUUID}})
+        })
+        .catch((error) => console.log(error))
     }
   },
   computed: {
@@ -156,7 +151,7 @@ export default {
 }
 
 .lobby-container {
-  /* height: 100%; */
+  height: 100%;
   display: flex;
   flex-flow: column;
   /* overflow: hidden; */
@@ -165,6 +160,7 @@ export default {
 .lobby-body {
   flex: 1;
   margin: 0;
+  height: 100%;
 }
 
 .column {
