@@ -6,7 +6,7 @@ const MaxTribes = 6
 // Tribe ...
 type Tribe struct {
 	Name  string `json:"name"`
-	Power string `jsong:"power"`
+	Power string `json:"power"`
 }
 
 var Centaur = Tribe{

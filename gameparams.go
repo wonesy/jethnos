@@ -22,17 +22,17 @@ func str2Mode(strMode string) GameMode {
 
 // GameParameters ...
 type GameParameters struct {
-	Tribes     []Tribe
-	Mode       GameMode
-	GameLeader *Client
+	Tribes     []Tribe  `json:"tribes"`
+	Mode       GameMode `json:"mode"`
+	GameLeader *Client  `json:"leader"`
 }
 
 // NewGameParams ...
-func NewGameParams(leader *Client, mode string, tribes []string) GameParameters {
+func NewGameParams(leader *Client, mode string, tribes []Tribe) GameParameters {
 	gp := GameParameters{
 		GameLeader: leader,
 		Mode:       str2Mode(mode),
-		Tribes:     BuildTribeList(tribes),
+		Tribes:     tribes,
 	}
 	return gp
 }

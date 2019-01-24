@@ -15,8 +15,8 @@
                 <span class="tag is-dark">mode</span>
                 <span class="tag show-mode"
                   :class="{
-                    'is-success': game.mode===0,
-                    'is-warning': game.mode===1
+                    'is-success': game.params.mode===0,
+                    'is-warning': game.params.mode===1
                     }">
                   {{modeString}}</span>
               </div>
@@ -60,7 +60,7 @@ export default {
         0: 'Democracy',
         1: 'Dictatorship'
       }
-      let str = mode2String[this.game.mode]
+      let str = mode2String[this.game.params.mode]
       if (str === undefined) {
         return 'Unknown'
       }

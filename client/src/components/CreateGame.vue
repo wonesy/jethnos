@@ -55,7 +55,8 @@ export default {
       gameModes: ['Democracy', 'Dictatorship'],
       selected: 'Democracy',
       submitIsDisabled: true,
-      selectedTribes: []
+      selectedTribes: [],
+      wtf: null
     }
   },
   computed: {
@@ -82,6 +83,8 @@ export default {
       }
 
       this.$http.post('http://localhost:4444/game/new', postData)
+        .then(stream => stream.json())
+        .then(data => (this.$store.dispatch('setJoinedGame', data)))
     }
   }
 }

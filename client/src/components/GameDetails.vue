@@ -45,7 +45,7 @@ export default {
         0: 'Democracy',
         1: 'Dictatorship'
       }
-      let str = mode2String[this.data.mode]
+      let str = mode2String[this.data.params.mode]
       if (str === undefined) {
         return 'Unknown'
       }

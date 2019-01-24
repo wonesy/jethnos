@@ -24,10 +24,7 @@ const store = new Vuex.Store({
       clientUUID: '',
       handle: ''
     },
-    game: {
-      name: '',
-      tribes: []
-    }
+    game: null
   },
   mutations: {
     SET_TOKEN (state, token) {
@@ -41,6 +38,9 @@ const store = new Vuex.Store({
     },
     SET_WEBSOCKET (state, ws) {
       state.websocket = ws
+    },
+    SET_GAME (state, game) {
+      state.game = game
     }
   },
   actions: {
@@ -82,6 +82,9 @@ const store = new Vuex.Store({
         commit('SET_WEBSOCKET', ws)
         resolve()
       })
+    },
+    setJoinedGame ({commit}, game) {
+      commit('SET_GAME', game)
     }
   },
   getters: {
@@ -94,7 +97,13 @@ const store = new Vuex.Store({
     userUUID: state => {
       return state.user.clientUUID
     },
-    gameTibes: state => {
+    gameUUID: state => {
+      return state.game
+    },
+    gameTribes: state => {
+      if (state.game === null) {
+        return null
+      }
       return state.game.tribes
     },
     websocket: state => {

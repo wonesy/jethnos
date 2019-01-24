@@ -52,16 +52,19 @@ type Game struct {
 
 // MarshalJSON ...
 func (g *Game) MarshalJSON() ([]byte, error) {
+	type AliasGameParams GameParameters
 	return json.Marshal(&struct {
-		UUID        string `json:"uuid"`
-		Name        string `json:"name"`
-		NumClients  int    `json:"numClients"`
-		GameStarted bool   `json:"isStarted"`
+		UUID        string          `json:"uuid"`
+		Name        string          `json:"name"`
+		NumClients  int             `json:"numClients"`
+		GameStarted bool            `json:"isStarted"`
+		Parameters  AliasGameParams `json:"params"`
 	}{
 		g.UUID.String(),
 		g.Name,
 		len(g.Clients),
 		g.GameStarted,
+		(AliasGameParams)(g.Parameters),
 	})
 }
 
@@ -167,10 +170,10 @@ func ListGamesHandler(w http.ResponseWriter, r *http.Request) {
 func NewGameHandler(w http.ResponseWriter, r *http.Request) {
 	// read post data
 	type postData struct {
-		Name   string   `json:"name"`
-		Leader string   `json:"uuid"`
-		Tribes []string `json:"tribes"`
-		Mode   string   `json:"mode"`
+		Name   string  `json:"name"`
+		Leader string  `json:"uuid"`
+		Tribes []Tribe `json:"tribes"`
+		Mode   string  `json:"mode"`
 	}
 
 	pd := postData{}
