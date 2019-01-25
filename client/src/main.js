@@ -63,21 +63,24 @@ const store = new Vuex.Store({
     setWebsocket ({commit}) {
       return new Promise((resolve, reject) => {
         let ws = new WebSocket('ws://localhost:4444/ws')
+
+        ws.onmessage = function (e) {
+          let data = JSON.parse(e.data)
+          if (data.type !== 'whoami') {
+            console.log('Error: sending message on the socket before game start')
+          } else if (data.hasOwnProperty('uuid')) {
+            commit('SET_USER_UUID', data.uuid)
+          } else {
+            console.log('Error reading uuid in whoami request')
+          }
+        }
+
         ws.onopen = function (e) {
           let msg = {
             'type': 'whoami',
             'data': ''
           }
           ws.send(JSON.stringify(msg))
-        }
-
-        ws.onmessage = function (e) {
-          let data = JSON.parse(e.data)
-          if (data.hasOwnProperty('uuid')) {
-            commit('SET_USER_UUID', data.uuid)
-          } else {
-            console.log('Error reading uuid in whoami request')
-          }
         }
         commit('SET_WEBSOCKET', ws)
         resolve()

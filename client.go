@@ -193,6 +193,10 @@ func (c *Client) socketReader() {
 				logger.Error(err.Error())
 				continue
 			}
+			if c.Game == nil {
+				logger.Error("Game doesn't exist")
+				continue
+			}
 			c.Game.ChatBroadcast <- chatMsg
 		case "whoami":
 			logger.Info("client is requesting a whoami")
