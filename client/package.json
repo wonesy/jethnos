@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "bulma": "^0.7.2",
+    "paper": "^0.12.0",
     "vue": "^2.5.2",
     "vue-carousel": "^0.17.0",
     "vue-lodash": "^2.0.0",

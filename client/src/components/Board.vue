@@ -3,10 +3,23 @@
 </template>
 
 <script>
+// import './../game_rules/animation.js'
+import { Board } from './../game_rules/animation.js'
+
 export default {
   name: 'Board',
   data () {
-    return {}
+    return {
+      board: null
+    }
+  },
+  mounted () {
+    // paper.install(window)
+    this.board = new Board('board')
+    this.board.setupCountryPoints()
+    // this.board.anotherLine()
+  },
+  methods: {
   }
 }
 </script>
