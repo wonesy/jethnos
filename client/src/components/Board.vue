@@ -3,8 +3,9 @@
 </template>
 
 <script>
-// import './../game_rules/animation.js'
-import { Board } from './../game_rules/animation.js'
+/* eslint-disable */
+import { paper, Path, Point } from 'paper'
+import  { Board } from './../game_rules/animation.js'
 
 export default {
   name: 'Board',
@@ -13,13 +14,12 @@ export default {
       board: null
     }
   },
-  mounted () {
-    // paper.install(window)
-    this.board = new Board('board')
-    this.board.setupCountryPoints()
-    // this.board.anotherLine()
+  created () {
+    paper.install(window)
   },
-  methods: {
+  mounted () {
+    this.board = new Board('board')
+    this.board.createRealms()
   }
 }
 </script>
