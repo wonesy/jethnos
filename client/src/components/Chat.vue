@@ -36,6 +36,16 @@ export default {
   created () {
     this.setSocketHandler()
   },
+  watch: {
+    newWebsocket: function (val, oldVal) {
+      this.setSocketHandler()
+    }
+  },
+  computed: {
+    newWebsocket: function () {
+      return this.$store.getters.websocket
+    }
+  },
   methods: {
     // TODO handle exceptions better here
     setSocketHandler: function () {

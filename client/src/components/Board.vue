@@ -18,8 +18,10 @@ export default {
     paper.install(window)
   },
   mounted () {
-    this.board = new Board('board')
-    this.board.createRealms()
+    var img = require('./../assets/slovakia.png')
+    console.log(img)
+    this.board = new Board('board', img)
+    // this.board.createRealms()
   }
 }
 </script>

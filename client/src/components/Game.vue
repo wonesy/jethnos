@@ -37,7 +37,7 @@ export default {
   grid-gap: 10px;
   grid-auto-rows: minmax(100px, auto);
   min-height: 100vh;
-  padding: 10px;
+  padding: 20px;
   max-width: 1750px;
   margin: auto;
 }
@@ -49,16 +49,16 @@ export default {
 
 .game-board {
   grid-column: 1 / 5;
-  grid-row: 2 / 6;
+  grid-row: 2 / 5;
 }
 
 .chat-box {
   grid-column: 1 / 3;
-  grid-row: 6 / 8;
+  grid-row: 5 / 8;
 }
 
 .game-info {
   grid-column: 3 / 5;
-  grid-row: 6 / 8;
+  grid-row: 5 / 8;
 }
 </style>
