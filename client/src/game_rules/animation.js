@@ -4,99 +4,103 @@ import { paper, Point, Path, view, Tool, hitOptions, project, PointText } from '
 import { Realm } from './realms'
 import { GameState } from './gamestate'
 
-var globalTool
-var globalMapSrc
-var globalCanvasElem
-
 /* globals */
-window.addEventListener('resize', function () {
-    paper.clear()
-    drawMap()
-})
+class Measurements {
+    constructor (canvasId) {
+        this.canvasElem = document.getElementById(canvasId)
 
-function toRadians (angle) {
-    return angle * (Math.PI / 180);
-}
-
-export class Board {
-    constructor (canvasId, mapSrc) {
-        globalCanvasElem = document.getElementById(canvasId)
-        paper.setup(canvasId)
-        globalTool = new Tool()
-        globalTool.onMouseDown = onMouseDown
-        globalTool.onMouseDrag = onMouseDrag
-        globalTool.onMouseMove = onMouseMove
-
-        globalMapSrc = mapSrc
-
-        drawMap()
+        // total canvas width and height
+        this.cWidth = this.canvasElem.scrollWidth
+        this.cHeight = this.canvasElem.scrollHeight
+        
+        // map edges
+        this.mapLeftEdge = 0.2 * this.cWidth
+        this.mapRightEdge = 0.8 * this.cWidth
+        this.mapTopEdge = 0.1 * this.cHeight
+        this.mapBotEdge = 0.7 * this.cHeight
+        
+        // realm centers and offsets
+        this.mapWidth = this.mapRightEdge - this.mapLeftEdge
+        this.dotSpacingX = this.mapWidth / 6
+        this.mapHeight = this.mapBotEdge - this.mapTopEdge
+        this.dotSpacingY = this.mapHeight / 6
     }
 }
 
-function drawMap() {
-    var mapWidth = globalCanvasElem.Width * 0.5
-    var mapHeight = globalCanvasElem.scrollHeight * 0.4
+var tool
+var measurements
 
-    var raster = new paper.Raster({
-        source: globalMapSrc,
-        position: paper.view.center,
-        size: new paper.Size(mapWidth, mapHeight - 150),
-        data: {
-            background: true
+// Raster.prototype.resize = function (width) {
+//     this.width = width
+//     this.height = width/2
+// }
+
+export class Board {
+    constructor (canvasId, mapImgSrc) {
+        this.m = new Measurements(canvasId)
+        paper.setup(canvasId)
+        tool = new Tool()
+        tool.onMouseDown = onMouseDown
+        tool.onMouseDrag = onMouseDrag
+        tool.onMouseMove = onMouseMove
+
+        this.background = new Raster({
+            source: mapImgSrc,
+            position: view.center,
+            width: 1000,
+            height: 500,
+        });
+        this.background.data = {
+            'type': 'map',
+            'draggable': false,
+            'clickable': false
         }
-    });
 
-    writeName(40, 40, 'green', 'Noremac Leahhcim')
-    writeName(35, 50, 'orange', 'Staffaronia')
-    writeName(11.5, 910, 'purple', 'Deedubbya')
-    writeName(52, 520, 'red', 'Shotsguyville')
-    writeName(31, 690, 'blue', 'Steakton')
-    writeName(19, 950, 'pink', 'Bigdansylvania')
+        this.gamestate = new GameState()
+
+        // Northwest
+        drawRealmName(190, 260, this.gamestate.realms[0])
+
+        // Northmiddle
+        drawRealmName(240, 150, this.gamestate.realms[1])
+
+        // Northeast
+        drawRealmName(337, 310, this.gamestate.realms[2])
+
+        // Southwest
+        drawRealmName(160, 330, this.gamestate.realms[3])
+
+        // South
+        drawRealmName(110, 40, this.gamestate.realms[4])
+
+        // Southeast
+        drawRealmName(359, 295, this.gamestate.realms[5])
+    }
 }
 
-function writeName(angle, pctLength, color, content) {
-    var canvasHeight = globalCanvasElem.scrollHeight
-    var hypotenuse = canvasHeight / Math.cos(toRadians(angle))
-    var length = hypotenuse * pctLength / 100
-
-    var p = new paper.Point({
+function drawRealmName(angle, length, realm) {
+    // create a point with an angle and length relative to the center
+    var p = new Point({
         angle: angle,
         length: length
     })
-    var pC = new paper.Path.Circle(p, 5)
-    pC.fillColor = color
-    pC.data = {type: 'realm'}
+    p.x += view.center.x
+    p.y += view.center.y
 
-    var textP = new paper.Point(p)
-
-    var text = new paper.PointText(textP)
-    text.fillColor = 'black'
-    text.content = content
-    text.fontFamily = 'Bookman'
+    var text = new PointText(p)
+    text.justification = 'center';
+    text.fillColor = 'black';
+    text.fontFamily = 'Comfortaa'
+    text.fontSize = 18
     text.fontWeight = 'bold'
-    text.fontSize = 15
+    text.content = realm.name;
     text.data = {
-        type: 'title'
+        'type': 'realm',
+        'draggable': false,
+        'clickable': true,
+        'realm': realm
     }
 }
-
-export var RealmPositions = {
-    NORTHWEST: 0,
-    NORTHMID: 1,
-    NORTHEAST: 2,
-    SOUTHWEST: 3,
-    SOUTHMID: 4,
-    SOUTHEAST: 5
-}
-Object.freeze(RealmPositions)
-
-export class Realm {
-    constructor (name, position) {
-        this.name = name
-        this.position = position
-    }
-}
-
 
 var segment, path;
 var movePath = false;
@@ -106,14 +110,6 @@ function onMouseDown(event) {
 	if (!hitResult) {
         return
     }
-
-    console.log(hitResult.type)
-    console.log(hitResult.item)
-    console.log(hitResult.item.data)
-
-    // if (hitResult.item.data.background) {
-    //     return
-    // }
         
 	if (event.modifiers.shift) {
 		if (hitResult.type == 'segment') {
@@ -135,11 +131,9 @@ function onMouseDown(event) {
 }
 
 function onMouseMove(event) {
-    project.activeLayer.selected = true;
-    document.body.style.cursor = "default";
-
-	if (event.item && event.item.data.type === 'title') {
-        document.body.style.cursor = "pointer";
+    document.getElementById('board').style.cursor = 'default'
+	if (event.item && event.item.data.clickable) {
+        document.getElementById('board').style.cursor = 'pointer'
     }
 }
 

@@ -15,5 +15,6 @@ func HandFull(hand []Tribe) bool {
 // NewPlayerState ...
 func NewPlayerState() *PlayerState {
 	p := &PlayerState{}
+
 	return p
 }

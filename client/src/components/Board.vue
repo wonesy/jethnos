@@ -11,8 +11,7 @@ export default {
   name: 'Board',
   data () {
     return {
-      board: null,
-      gamestate: null
+      board: null
     }
   },
   created () {
@@ -20,7 +19,6 @@ export default {
   },
   mounted () {
     var img = require('./../assets/slovakia.png')
-    console.log(img)
     this.board = new Board('board', img)
     // this.board.createRealms()
   }
@@ -31,9 +29,5 @@ export default {
 canvas {
   height: 100%;
   width: 100%;
-}
-
-.pointer-cursor {
-  cursor: pointer;
 }
 </style>
