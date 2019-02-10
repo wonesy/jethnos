@@ -19,16 +19,10 @@ export default {
     paper.install(window)
   },
   mounted () {
-<<<<<<< HEAD
     var img = require('./../assets/slovakia.png')
     console.log(img)
     this.board = new Board('board', img)
     // this.board.createRealms()
-=======
-    var map = require('../assets/slovakia.png')
-    this.board = new Board('board', map)
-    this.gamestate = board.gamestate
->>>>>>> working on map
   }
 }
 </script>
