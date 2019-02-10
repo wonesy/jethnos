@@ -1,6 +1,8 @@
 /* eslint-disable */
 
-import { paper, Point, Path, view, Tool, hitOptions, project } from 'paper'
+import { paper, Point, Path, view, Tool, hitOptions, project, PointText } from 'paper'
+import { Realm } from './realms'
+import { GameState } from './gamestate'
 
 var globalTool
 var globalMapSrc
@@ -118,8 +120,12 @@ function onMouseDown(event) {
 			hitResult.segment.remove();
 		};
 		return;
-	}
-    path = hitResult.item;
+    }
+
+    if (hitResult.item.data.draggable) {
+        path = hitResult.item;
+    }
+
     if (hitResult.type == 'segment') {
         segment = hitResult.segment;
     }

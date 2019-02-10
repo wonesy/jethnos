@@ -1,6 +1,6 @@
 <template>
   <div class="xx game-container">
-    <div class="xx players-bar">players</div>
+    <div class="xx players-bar"></div>
     <div class="xx game-board"><board></board></div>
     <div class="chat-box"><chat></chat></div>
     <div class="xx game-info">info</div>

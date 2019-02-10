@@ -26,10 +26,12 @@ var GlobalClientMap = make(map[uuid.UUID]*Client)
 
 // Client ...
 type Client struct {
-	UUID   uuid.UUID
-	Socket *websocket.Conn
-	Game   *Game
-	Chat   chan ChatMessage
+	UUID        uuid.UUID
+	Handle      string
+	Socket      *websocket.Conn
+	Game        *Game
+	Chat        chan ChatMessage
+	PlayerState *PlayerState
 }
 
 // MarshalJSON ...

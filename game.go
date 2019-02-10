@@ -49,6 +49,9 @@ type Game struct {
 
 	// Used to keep specific parameters for this game
 	Parameters GameParameters
+
+	// Keeps track of the overall game state
+	State GameState
 }
 
 // MarshalJSON ...
@@ -108,6 +111,7 @@ func NewGame(name string, params GameParameters) *Game {
 		Unregister:    make(chan *Client),
 		GameStarted:   false,
 		Parameters:    params,
+		State:         CreateGameState(params),
 	}
 
 	logger.Info("created new game: " + game.Name)
