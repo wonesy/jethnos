@@ -4,9 +4,19 @@ import "math/rand"
 
 // GameState ...
 type GameState struct {
-	Age           int
-	TrollTokens   [6]TrollToken
-	Deck          []Tribe
+	// Dragon age, three total before the end of the game
+	Age int
+
+	// List of tokens from 1-6 for troll games
+	TrollTokens [6]TrollToken
+
+	// The overall deck of "cards"
+	Deck []Card
+
+	// Public pool of cards that users can choose from
+	Pool []Card
+
+	// Indices at which point a dragon appears, third one marking the end of an age
 	DragonIndices [3]int
 }
 
@@ -33,11 +43,7 @@ func (gs *GameState) init(tribeList []Tribe) {
 }
 
 func (gs *GameState) initDeck(tribeList []Tribe) {
-	for _, tribe := range tribeList {
-		for i := 0; i < tribe.Count; i++ {
-			gs.Deck = append(gs.Deck, tribe)
-		}
-	}
+	gs.Deck = CreateDeck(tribeList)
 	gs.ShuffleDeck()
 }
 

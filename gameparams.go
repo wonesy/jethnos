@@ -51,23 +51,42 @@ const (
 	BLUE ColorEnum = 0 << iota
 
 	// GREEN ...
-	GREEN
+	GREEN = iota
 
 	// ORANGE ...
-	ORANGE
+	ORANGE = iota
 
 	// RED ...
-	RED
+	RED = iota
 
 	// PURPLE ...
-	PURPLE
+	PURPLE = iota
 
 	// GREY ...
-	GREY
+	GREY = iota
 
 	// BROWN ...
-	BROWN
+	BROWN = iota
 )
+
+func (c ColorEnum) String() string {
+	if c == GREEN {
+		return "green"
+	} else if c == BLUE {
+		return "blue"
+	} else if c == ORANGE {
+		return "orange"
+	} else if c == RED {
+		return "red"
+	} else if c == PURPLE {
+		return "purple"
+	} else if c == GREY {
+		return "grey"
+	} else if c == BROWN {
+		return "brown"
+	}
+	return "unknown"
+}
 
 /*
 	TROLLS
